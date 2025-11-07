@@ -361,14 +361,41 @@ docker logs -f vibe-kanban
 
 ## トラブルシューティング
 
-### ポートが既に使用されている
+よくある問題と詳細な解決方法については、**[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** を参照してください。
+
+主なトピック：
+- **Dockerイメージに関する問題**: "Unable to find image 'vibe-kanban:latest'"、ビルド失敗など
+- **コンテナ起動に関する問題**: ポート競合、コンテナ名の競合など
+- **認証に関する問題**: Claude Code認証エラー、トークン期限切れなど
+- **ネットワークに関する問題**: インターネット接続、DNS、プロキシ設定など
+- **パフォーマンスに関する問題**: コンテナやビルドが遅い場合の対処法
+
+### クイックリファレンス
+
+#### ポートが既に使用されている
 
 ```bash
-# 別のポートにマッピング
+# 既存のコンテナを停止
+docker stop vibe-kanban
+docker rm vibe-kanban
+
+# または別のポートにマッピング
 docker run -d -p 8080:3000 vibe-kanban:latest
 ```
 
-### 権限エラー
+#### Dockerイメージが見つからない
+
+```bash
+# quick-setup.shを使用（推奨）
+bash quick-setup.sh
+
+# または手動でビルド
+git clone --depth 1 https://github.com/BloopAI/vibe-kanban.git
+cd vibe-kanban
+docker build -t vibe-kanban:latest .
+```
+
+#### 権限エラー
 
 ```bash
 # ボリュームの権限を確認
@@ -378,7 +405,7 @@ docker run -d \
   vibe-kanban:latest
 ```
 
-### メモリ不足
+#### メモリ不足
 
 ```bash
 # メモリ制限を増やす
