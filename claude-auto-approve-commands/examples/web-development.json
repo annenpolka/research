@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allowedTools": [
+      "Read",
+      "Write(src/**)",
+      "Write(tests/**)",
+      "Edit(src/**)",
+      "Edit(tests/**)",
+      "Glob",
+      "Grep",
+      "Bash(npm :*)",
+      "Bash(yarn :*)",
+      "Bash(pnpm :*)",
+      "Bash(git status)",
+      "Bash(git diff :*)",
+      "Bash(git add :*)",
+      "Bash(git log :*)"
+    ],
+    "deny": [
+      "Read(.env*)",
+      "Write(.env*)",
+      "Edit(.env*)",
+      "Bash(rm -rf :*)",
+      "Bash(git push --force :*)"
+    ]
+  }
+}

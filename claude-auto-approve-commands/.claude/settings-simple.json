@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allowedTools": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Bash(ls :*)",
+      "Bash(pwd)",
+      "Bash(git status)",
+      "Bash(git diff :*)",
+      "Bash(git log :*)",
+      "Bash(npm run :*)",
+      "Bash(pytest :*)",
+      "Write",
+      "Edit"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(secrets/**)",
+      "Bash(rm -rf :*)",
+      "Bash(dd :*)"
+    ]
+  }
+}

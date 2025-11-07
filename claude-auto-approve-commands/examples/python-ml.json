@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allowedTools": [
+      "Read",
+      "Write(*.py)",
+      "Write(notebooks/**)",
+      "Edit(*.py)",
+      "Edit(notebooks/**)",
+      "Glob",
+      "Grep",
+      "Bash(python :*)",
+      "Bash(python3 :*)",
+      "Bash(pip install :*)",
+      "Bash(pip list)",
+      "Bash(pytest :*)",
+      "Bash(jupyter :*)",
+      "Bash(git status)",
+      "Bash(git diff :*)"
+    ],
+    "deny": [
+      "Read(.env*)",
+      "Read(**/credentials.json)",
+      "Write(.env*)",
+      "Bash(rm -rf :*)"
+    ]
+  }
+}
