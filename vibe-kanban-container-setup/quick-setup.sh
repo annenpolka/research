@@ -7,6 +7,35 @@ set -e
 echo "🚀 vibe-kanban Quick Setup"
 echo ""
 
+# Dockerイメージの確認とビルド
+if ! docker images | grep -q "vibe-kanban"; then
+    echo "🔨 vibe-kanbanのDockerイメージが見つかりません。ビルドを開始します..."
+    echo ""
+
+    # 一時ディレクトリを作成
+    TEMP_DIR=$(mktemp -d)
+    trap "rm -rf $TEMP_DIR" EXIT
+
+    echo "📦 vibe-kanbanリポジトリをクローン中..."
+    if ! git clone --depth 1 https://github.com/BloopAI/vibe-kanban.git "$TEMP_DIR/vibe-kanban" 2>/dev/null; then
+        echo "❌ エラー: リポジトリのクローンに失敗しました"
+        exit 1
+    fi
+
+    echo "🏗️  Dockerイメージをビルド中（これには数分かかる場合があります）..."
+    if ! docker build -t vibe-kanban:latest "$TEMP_DIR/vibe-kanban" 2>&1 | grep -E "(Step|Successfully|^#)"; then
+        echo "❌ エラー: Dockerイメージのビルドに失敗しました"
+        exit 1
+    fi
+
+    echo ""
+    echo "✅ Dockerイメージのビルドが完了しました"
+    echo ""
+else
+    echo "✅ vibe-kanbanのDockerイメージが見つかりました"
+    echo ""
+fi
+
 # プロジェクトディレクトリを聞く（/dev/ttyから直接読み込み）
 read -p "📁 プロジェクトディレクトリのパスを入力 (例: ~/projects/my-app): " PROJECT_DIR < /dev/tty
 
