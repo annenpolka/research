@@ -8,7 +8,7 @@ echo "🚀 vibe-kanban Quick Setup"
 echo ""
 
 # Dockerイメージの確認とビルド
-if ! docker images | grep -q "vibe-kanban"; then
+if ! docker image inspect vibe-kanban:latest >/dev/null 2>&1; then
     echo "🔨 vibe-kanbanのDockerイメージが見つかりません。ビルドを開始します..."
     echo ""
 
@@ -17,23 +17,92 @@ if ! docker images | grep -q "vibe-kanban"; then
     trap "rm -rf $TEMP_DIR" EXIT
 
     echo "📦 vibe-kanbanリポジトリをクローン中..."
-    if ! git clone --depth 1 https://github.com/BloopAI/vibe-kanban.git "$TEMP_DIR/vibe-kanban" 2>/dev/null; then
+    if ! git clone --depth 1 https://github.com/BloopAI/vibe-kanban.git "$TEMP_DIR/vibe-kanban"; then
         echo "❌ エラー: リポジトリのクローンに失敗しました"
+        echo "   ネットワーク接続を確認してください"
+        exit 1
+    fi
+
+    # Dockerfileの存在確認
+    if [ ! -f "$TEMP_DIR/vibe-kanban/Dockerfile" ]; then
+        echo "❌ エラー: Dockerfileが見つかりません"
+        echo "   リポジトリ構造が変更された可能性があります"
         exit 1
     fi
 
     echo "🏗️  Dockerイメージをビルド中（これには数分かかる場合があります）..."
-    if ! docker build -t vibe-kanban:latest "$TEMP_DIR/vibe-kanban" 2>&1 | grep -E "(Step|Successfully|^#)"; then
+    echo "   ビルドログを確認したい場合は、別ターミナルで 'docker logs -f' を実行してください"
+
+    # ビルドログを一時ファイルに保存
+    BUILD_LOG=$(mktemp)
+    trap "rm -rf $TEMP_DIR $BUILD_LOG" EXIT
+
+    if docker build -t vibe-kanban:latest "$TEMP_DIR/vibe-kanban" > "$BUILD_LOG" 2>&1; then
+        echo ""
+        echo "✅ Dockerイメージのビルドが完了しました"
+        echo ""
+    else
+        echo ""
         echo "❌ エラー: Dockerイメージのビルドに失敗しました"
+        echo ""
+        echo "=== ビルドログ（最後の30行） ==="
+        tail -n 30 "$BUILD_LOG"
+        echo "================================"
+        echo ""
+        echo "💡 トラブルシューティング:"
+        echo "   1. Docker Desktopが起動しているか確認"
+        echo "   2. ディスク容量が十分にあるか確認"
+        echo "   3. インターネット接続を確認"
+        echo "   4. 完全なログは: $BUILD_LOG"
         exit 1
     fi
-
-    echo ""
-    echo "✅ Dockerイメージのビルドが完了しました"
-    echo ""
 else
     echo "✅ vibe-kanbanのDockerイメージが見つかりました"
+
+    # イメージの作成日時を表示
+    IMAGE_DATE=$(docker image inspect vibe-kanban:latest --format='{{.Created}}' 2>/dev/null | cut -d'T' -f1)
+    if [ -n "$IMAGE_DATE" ]; then
+        echo "   作成日: $IMAGE_DATE"
+    fi
     echo ""
+
+    # イメージの再ビルドを提案
+    read -p "💡 イメージを再ビルドしますか？ (y/N) [デフォルト: N]: " REBUILD < /dev/tty
+    REBUILD=${REBUILD:-N}
+
+    if [[ "$REBUILD" =~ ^[Yy]$ ]]; then
+        echo ""
+        echo "🔨 イメージを再ビルドします..."
+        echo ""
+
+        # 一時ディレクトリを作成
+        TEMP_DIR=$(mktemp -d)
+        trap "rm -rf $TEMP_DIR" EXIT
+
+        echo "📦 vibe-kanbanリポジトリをクローン中..."
+        if ! git clone --depth 1 https://github.com/BloopAI/vibe-kanban.git "$TEMP_DIR/vibe-kanban"; then
+            echo "❌ エラー: リポジトリのクローンに失敗しました"
+            exit 1
+        fi
+
+        echo "🏗️  Dockerイメージをビルド中..."
+        BUILD_LOG=$(mktemp)
+        trap "rm -rf $TEMP_DIR $BUILD_LOG" EXIT
+
+        if docker build -t vibe-kanban:latest "$TEMP_DIR/vibe-kanban" > "$BUILD_LOG" 2>&1; then
+            echo ""
+            echo "✅ Dockerイメージの再ビルドが完了しました"
+            echo ""
+        else
+            echo ""
+            echo "❌ エラー: Dockerイメージのビルドに失敗しました"
+            echo ""
+            echo "=== ビルドログ（最後の30行） ==="
+            tail -n 30 "$BUILD_LOG"
+            echo "================================"
+            exit 1
+        fi
+    fi
 fi
 
 # プロジェクトディレクトリを聞く（/dev/ttyから直接読み込み）

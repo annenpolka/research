@@ -17,14 +17,26 @@ MODE="${1:-basic}"
 case "$MODE" in
   basic)
     echo -e "${YELLOW}基本モードで実行します${NC}"
-    echo "リポジトリのクローン..."
-    if [ ! -d "vibe-kanban" ]; then
-      git clone https://github.com/BloopAI/vibe-kanban.git
-    fi
-    cd vibe-kanban
 
-    echo -e "\n${YELLOW}Dockerイメージをビルド中...${NC}"
-    docker build -t vibe-kanban:latest .
+    # Dockerイメージの確認
+    if ! docker image inspect vibe-kanban:latest >/dev/null 2>&1; then
+      echo "リポジトリのクローン..."
+      if [ ! -d "vibe-kanban" ]; then
+        if ! git clone https://github.com/BloopAI/vibe-kanban.git; then
+          echo -e "${RED}❌ エラー: リポジトリのクローンに失敗しました${NC}"
+          exit 1
+        fi
+      fi
+      cd vibe-kanban
+
+      echo -e "\n${YELLOW}Dockerイメージをビルド中...${NC}"
+      if ! docker build -t vibe-kanban:latest .; then
+        echo -e "${RED}❌ エラー: Dockerイメージのビルドに失敗しました${NC}"
+        exit 1
+      fi
+    else
+      echo -e "${GREEN}✓ vibe-kanban:latestイメージが見つかりました${NC}"
+    fi
 
     echo -e "\n${YELLOW}コンテナを起動中...${NC}"
     docker run -d \
@@ -38,14 +50,26 @@ case "$MODE" in
 
   secure)
     echo -e "${YELLOW}セキュアモードで実行します${NC}"
-    echo "リポジトリのクローン..."
-    if [ ! -d "vibe-kanban" ]; then
-      git clone https://github.com/BloopAI/vibe-kanban.git
-    fi
-    cd vibe-kanban
 
-    echo -e "\n${YELLOW}Dockerイメージをビルド中...${NC}"
-    docker build -t vibe-kanban:latest .
+    # Dockerイメージの確認
+    if ! docker image inspect vibe-kanban:latest >/dev/null 2>&1; then
+      echo "リポジトリのクローン..."
+      if [ ! -d "vibe-kanban" ]; then
+        if ! git clone https://github.com/BloopAI/vibe-kanban.git; then
+          echo -e "${RED}❌ エラー: リポジトリのクローンに失敗しました${NC}"
+          exit 1
+        fi
+      fi
+      cd vibe-kanban
+
+      echo -e "\n${YELLOW}Dockerイメージをビルド中...${NC}"
+      if ! docker build -t vibe-kanban:latest .; then
+        echo -e "${RED}❌ エラー: Dockerイメージのビルドに失敗しました${NC}"
+        exit 1
+      fi
+    else
+      echo -e "${GREEN}✓ vibe-kanban:latestイメージが見つかりました${NC}"
+    fi
 
     echo -e "\n${YELLOW}セキュアな設定でコンテナを起動中...${NC}"
     docker run -d \
@@ -84,12 +108,30 @@ case "$MODE" in
     echo -e "${YELLOW}強化版Dockerfileで実行します${NC}"
 
     if [ ! -f "../Dockerfile.hardened" ]; then
-      echo -e "${RED}エラー: Dockerfile.hardenedが見つかりません${NC}"
+      echo -e "${RED}❌ エラー: Dockerfile.hardenedが見つかりません${NC}"
+      echo "   vibe-kanban-container-setupディレクトリで実行してください"
       exit 1
     fi
 
-    echo -e "\n${YELLOW}強化版Dockerイメージをビルド中...${NC}"
-    docker build -f ../Dockerfile.hardened -t vibe-kanban:hardened .
+    # Dockerイメージの確認
+    if ! docker image inspect vibe-kanban:hardened >/dev/null 2>&1; then
+      echo "リポジトリのクローン..."
+      if [ ! -d "vibe-kanban" ]; then
+        if ! git clone https://github.com/BloopAI/vibe-kanban.git; then
+          echo -e "${RED}❌ エラー: リポジトリのクローンに失敗しました${NC}"
+          exit 1
+        fi
+      fi
+      cd vibe-kanban
+
+      echo -e "\n${YELLOW}強化版Dockerイメージをビルド中...${NC}"
+      if ! docker build -f ../Dockerfile.hardened -t vibe-kanban:hardened .; then
+        echo -e "${RED}❌ エラー: Dockerイメージのビルドに失敗しました${NC}"
+        exit 1
+      fi
+    else
+      echo -e "${GREEN}✓ vibe-kanban:hardenedイメージが見つかりました${NC}"
+    fi
 
     echo -e "\n${YELLOW}強化版コンテナを起動中...${NC}"
     docker run -d \
