@@ -427,6 +427,229 @@ For more details, see README.md and QUICKSTART.md.
 
 **結論**: `bd onboard`は非侵襲的（ファイルを直接変更しない）ですが、その出力内容はgit同期を前提としているため、完全ローカル運用の場合は**使用せず、独自の簡略版を作成することを推奨**します。
 
+### オリジナルをベースにした完全ローカル運用版
+
+`bd onboard`の出力内容を最大限尊重しつつ、完全ローカル運用向けに調整したバージョン：
+
+<details>
+<summary><b>完全ローカル運用版（クリックして展開）</b></summary>
+
+```markdown
+## Issue Tracking with bd (beads)
+
+**IMPORTANT**: This project uses **bd (beads)** for ALL issue tracking. Do NOT use markdown TODOs, task lists, or other tracking methods.
+
+**NOTE**: このプロジェクトでは、beadsを**完全ローカルモード**で使用しています。`.beads/`ディレクトリはgitignoreされており、コミット対象外です。
+
+### Why bd?
+
+- Dependency-aware: Track blockers and relationships between issues
+- Local-first: ローカルで動作し、gitには影響しません
+- Agent-optimized: JSON output, ready work detection, discovered-from links
+- Prevents duplicate tracking systems and confusion
+
+### Quick Start
+
+**Check for ready work:**
+```bash
+bd ready --json
+```
+
+**Create new issues:**
+```bash
+bd create "Issue title" -t bug|feature|task -p 0-4 --json
+bd create "Issue title" -p 1 --deps discovered-from:bd-123 --json
+```
+
+**Claim and update:**
+```bash
+bd update bd-42 --status in_progress --json
+bd update bd-42 --priority 1 --json
+```
+
+**Complete work:**
+```bash
+bd close bd-42 --reason "Completed" --json
+```
+
+### Issue Types
+
+- `bug` - Something broken
+- `feature` - New functionality
+- `task` - Work item (tests, docs, refactoring)
+- `epic` - Large feature with subtasks
+- `chore` - Maintenance (dependencies, tooling)
+
+### Priorities
+
+- `0` - Critical (security, data loss, broken builds)
+- `1` - High (major features, important bugs)
+- `2` - Medium (default, nice-to-have)
+- `3` - Low (polish, optimization)
+- `4` - Backlog (future ideas)
+
+### Workflow for AI Agents
+
+1. **Check ready work**: `bd ready` shows unblocked issues
+2. **Claim your task**: `bd update <id> --status in_progress`
+3. **Work on it**: Implement, test, document
+4. **Discover new work?** Create linked issue:
+   - `bd create "Found bug" -p 1 --deps discovered-from:<parent-id>`
+5. **Complete**: `bd close <id> --reason "Done"`
+
+### Local-Only Operation
+
+beadsは完全にローカルで動作します：
+- `.beads/`ディレクトリはgitignoreされています
+- コミット時に`.beads/issues.jsonl`を含める必要はありません
+- git操作は通常通り行えます（beadsは影響しません）
+- データはこのマシンでのみ保持されます
+
+### Initial Setup (for Agents)
+
+beadsがまだ初期化されていない場合:
+
+```bash
+# 1. Initialize beads
+bd init --skip-merge-driver --quiet
+
+# 2. Verify .beads/ is in .gitignore
+grep ".beads/" .gitignore
+
+# 3. Confirm git is ignoring it
+git status | grep -q ".beads" && echo "WARNING: .beads/ is tracked!" || echo "OK: .beads/ is ignored"
+```
+
+### MCP Server (Recommended)
+
+If using Claude or MCP-compatible clients, install the beads MCP server:
+
+```bash
+pip install beads-mcp
+```
+
+Add to MCP config (e.g., `~/.config/claude/config.json`):
+```json
+{
+  "beads": {
+    "command": "beads-mcp",
+    "args": []
+  }
+}
+```
+
+Then use `mcp__beads__*` functions instead of CLI commands.
+
+### Managing AI-Generated Planning Documents
+
+AI assistants often create planning and design documents during development:
+- PLAN.md, IMPLEMENTATION.md, ARCHITECTURE.md
+- DESIGN.md, CODEBASE_SUMMARY.md, INTEGRATION_PLAN.md
+- TESTING_GUIDE.md, TECHNICAL_DESIGN.md, and similar files
+
+**Best Practice: Use a dedicated directory for these ephemeral files**
+
+**Recommended approach:**
+- Create a `history/` directory in the project root
+- Store ALL AI-generated planning/design docs in `history/`
+- Keep the repository root clean and focused on permanent project files
+- Only access `history/` when explicitly asked to review past planning
+
+**Example .gitignore entry (optional):**
+```
+# AI planning documents (ephemeral)
+history/
+```
+
+**Benefits:**
+- ✅ Clean repository root
+- ✅ Clear separation between ephemeral and permanent documentation
+- ✅ Easy to exclude from version control if desired
+- ✅ Preserves planning history for archeological research
+- ✅ Reduces noise when browsing the project
+
+### Important Rules
+
+- ✅ Use bd for ALL task tracking
+- ✅ Always use `--json` flag for programmatic use
+- ✅ Link discovered work with `discovered-from` dependencies
+- ✅ Check `bd ready` before asking "what should I work on?"
+- ✅ Store AI planning docs in `history/` directory
+- ✅ Remember: `.beads/` is local-only, not committed to git
+- ❌ Do NOT create markdown TODO lists
+- ❌ Do NOT use external issue trackers
+- ❌ Do NOT duplicate tracking systems
+- ❌ Do NOT clutter repo root with planning documents
+- ❌ Do NOT try to commit `.beads/` files to git
+
+### Limitations of Local-Only Mode
+
+- ❌ Data is not synced across machines
+- ❌ Cannot share issues with team members
+- ❌ Data will be lost if machine is changed (manual backup required)
+- ✅ However, this project is designed for single-machine, single-agent use
+
+### Troubleshooting
+
+If `.beads/` accidentally gets added to git:
+
+```bash
+git rm -r --cached .beads/
+echo ".beads/" >> .gitignore
+git add .gitignore
+git commit -m "Ensure .beads/ is ignored"
+```
+
+For more details about beads functionality, see the official README.md and QUICKSTART.md.
+```
+
+</details>
+
+### 変更点の詳細
+
+オリジナルの`bd onboard`出力からの主な変更点：
+
+1. **冒頭に注記追加**
+   ```markdown
+   **NOTE**: このプロジェクトでは、beadsを**完全ローカルモード**で使用しています。
+   ```
+
+2. **"Why bd?"セクションの調整**
+   - "Git-friendly: Auto-syncs to JSONL for version control" → "Local-first: ローカルで動作し、gitには影響しません"
+
+3. **"Workflow for AI Agents"のステップ6を削除**
+   - "Commit together" → 削除（不要）
+
+4. **"Auto-Sync"セクション全体を置き換え**
+   - 新セクション："Local-Only Operation"に変更
+   - ローカル運用の特徴を明記
+
+5. **"Initial Setup"セクション追加**
+   - エージェント向けの初期化手順
+   - .gitignore確認コマンド
+
+6. **"Important Rules"に追加**
+   - "Remember: `.beads/` is local-only, not committed to git"
+   - "Do NOT try to commit `.beads/` files to git"
+
+7. **"Limitations of Local-Only Mode"セクション追加**
+   - 完全ローカル運用の制限事項を明記
+
+8. **"Troubleshooting"セクション追加**
+   - `.beads/`が誤ってgitに追加された場合の対処法
+
+### 保持した内容
+
+以下のセクションはオリジナルから**変更なし**で保持：
+- ✅ Issue Types
+- ✅ Priorities
+- ✅ MCP Server設定
+- ✅ Managing AI-Generated Planning Documents
+- ✅ Quick Startコマンド
+- ✅ Important Rulesの大部分
+
+この調整版は、オリジナルの構成と内容を最大限尊重しつつ、完全ローカル運用に必要な変更のみを加えています。
+
 ## 初期化プロセスの詳細
 
 ### `bd init`が実行すること
