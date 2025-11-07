@@ -75,37 +75,68 @@ vibe-kanbanは各エージェントを統合・管理するためのオーケス
 
 ### 1. Claude Code
 
-#### 認証方法
+⚠️ **重要**: Docker環境での認証は複雑です（2025年時点で既知の問題あり）
 
-Claude Codeには3つの認証方法があります：
+#### ホスト実行の場合（簡単）
 
-1. **Claude Pro/Max サブスクリプション**（推奨）
-2. **Claude Team/Enterprise サブスクリプション**
-3. **Anthropic API キー**
+Claude Codeには2つの認証方法があります：
 
-#### API キーを使用する場合
+1. **Claude Pro/Max サブスクリプション**（推奨・ブラウザ認証）
+2. **Anthropic API キー**（従量課金）
 
-**API キーの取得**:
+```bash
+# ホストで実行する場合
+npx @anthropic-ai/claude-code
+# ブラウザで認証フローが開きます
+```
+
+#### Docker実行の場合（複雑）
+
+**❌ 動かない方法**:
+
+```bash
+# これだけでは動きません（GitHub Issue #9699）
+docker run -e ANTHROPIC_API_KEY=sk-ant-xxx vibe-kanban
+```
+
+**問題点**:
+- `ANTHROPIC_API_KEY`を設定しても`/login`を要求される
+- 非対話モードで"Invalid API key"エラー
+
+**✅ 動作する方法**:
+
+**方法1: OAuth Token（推奨）**
+
+```bash
+# ホストでトークンを生成
+npx @anthropic-ai/claude-code setup-token
+# トークンがクリップボードにコピーされます
+
+# Docker実行時
+docker run -e CLAUDE_CODE_OAUTH_TOKEN=<トークン> vibe-kanban
+```
+
+**方法2: 設定ファイルマウント**
+
+```bash
+# ホストで一度認証（一度だけ）
+npx @anthropic-ai/claude-code
+# ~/.claude/settings.json が作成される
+
+# Docker実行時に設定ファイルをマウント
+docker run -v ~/.claude:/root/.claude:ro vibe-kanban
+```
+
+#### API キーの取得
 
 1. [Anthropic Console](https://console.anthropic.com/)にログイン
 2. 「API Keys」セクションに移動
-3. 「Create Key」をクリックして新しいキーを作成
-4. キーは一度しか表示されないため、安全に保存
-
-**環境変数での設定**:
-
-```bash
-export ANTHROPIC_API_KEY="sk-ant-your-api-key-here"
-```
-
-**重要な注意事項**:
-
-- `ANTHROPIC_API_KEY`環境変数が設定されていると、Claude CodeはサブスクリプションではなくAPI使用量課金になります
-- `/status`コマンドで現在の認証方法を確認できます
+3. 「Create Key」をクリック
+4. キーを安全に保存（一度しか表示されません）
 
 #### コスト
 
-- **Claude Pro**: 月額$20（US）/ $24（日本）
+- **Claude Pro/Max**: 月額$20（US）/ $24（日本）- ブラウザ認証
 - **API使用**: 従量課金
   - Claude 3.5 Sonnet: $3/MTok (input), $15/MTok (output)
   - Claude 3 Opus: $15/MTok (input), $75/MTok (output)
@@ -229,21 +260,36 @@ export OPENAI_API_KEY="sk-your-openai-api-key-here"
 
 ## コンテナ環境での認証情報管理
 
-vibe-kanbanをコンテナで実行する際、エージェントのAPI keyやトークンを安全に渡す必要があります。
+vibe-kanbanをコンテナで実行する際、エージェントの認証情報を安全に渡す必要があります。
+
+⚠️ **重要**: Claude CodeはANTHROPIC_API_KEYだけでは動作しません。OAuth tokenまたは設定ファイルが必要です。
 
 ### 方法1: 環境変数ファイル（開発環境向け）
 
-**ステップ1: .envファイルを作成**
+**ステップ1: Claude Code用トークンを生成**
+
+```bash
+npx @anthropic-ai/claude-code setup-token
+# トークンをコピー
+```
+
+**ステップ2: .envファイルを作成**
 
 ```bash
 # .env
-ANTHROPIC_API_KEY=sk-ant-your-key-here
+# Claude Code用（OAuth token推奨）
+CLAUDE_CODE_OAUTH_TOKEN=<生成されたトークン>
+
+# その他のエージェント用（API keyで動作）
 GEMINI_API_KEY=your-gemini-key-here
-CURSOR_API_KEY=your-cursor-key-here
 OPENAI_API_KEY=sk-your-openai-key-here
+CURSOR_API_KEY=your-cursor-key-here
+
+# 注意: ANTHROPIC_API_KEYは単独では動作しません
+# ANTHROPIC_API_KEY=sk-ant-xxx  # ❌ これだけでは不十分
 ```
 
-**ステップ2: Dockerで使用**
+**ステップ3: Dockerで使用**
 
 ```bash
 docker run -d \
@@ -251,6 +297,7 @@ docker run -d \
   -p 3000:3000 \
   --env-file .env \
   -v ~/projects/my-app:/repos/my-app:rw \
+  --user $(id -u):$(id -g) \
   vibe-kanban:latest
 ```
 
@@ -259,6 +306,44 @@ docker run -d \
 ```bash
 echo ".env" >> .gitignore
 ```
+
+### 方法1-B: 設定ファイルマウント（より簡単）
+
+```bash
+# ステップ1: ホストで一度認証
+npx @anthropic-ai/claude-code
+# ~/.claude/settings.json が作成されます（macOS/Linux/WSL共通）
+
+# ステップ2: .envファイルを作成（Claude Code除く）
+# .env
+GEMINI_API_KEY=your-gemini-key-here
+OPENAI_API_KEY=sk-your-openai-key-here
+
+# ステップ3: 設定ファイルをマウント
+# macOS/Linux/WSL
+docker run -d \
+  --name vibe-kanban \
+  -p 3000:3000 \
+  --env-file .env \
+  -v ~/.claude:/root/.claude:ro \
+  -v ~/projects/my-app:/repos/my-app:rw \
+  --user $(id -u):$(id -g) \
+  vibe-kanban:latest
+
+# Windows PowerShell
+docker run -d `
+  --name vibe-kanban `
+  -p 3000:3000 `
+  --env-file .env `
+  -v ${env:USERPROFILE}\.claude:/root/.claude:ro `
+  -v ${env:USERPROFILE}\projects\my-app:/repos/my-app:rw `
+  vibe-kanban:latest
+```
+
+**設定ファイルの場所**：
+- **macOS/Linux/WSL**: `~/.claude/settings.json`
+- **Windows（PowerShell）**: `$env:USERPROFILE\.claude\settings.json`
+- **注意**: WSLでは必ずLinux filesystem内（`~/.claude/`）を使用。Windows側（`/mnt/c/`）ではありません。
 
 ---
 

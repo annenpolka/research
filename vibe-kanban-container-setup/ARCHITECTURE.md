@@ -191,49 +191,122 @@ ANTHROPIC_API_KEY=sk-ant-xxx npx -y @anthropic-ai/claude-code@2.0.31
    - npmレジストリへのアクセスが必要
    - オフライン環境では使用困難
 
-## 認証方法
+## 認証方法（Docker実行の場合）
 
-### API keyを使用（推奨）
+⚠️ **重要**: Docker環境でのエージェント認証は、ホスト実行より複雑です。
 
-各エージェントのAPI keyを環境変数で渡します：
+### Claude Codeの場合（複雑）
+
+Claude Codeの認証は2025年時点で複数の既知の問題があります。
+
+#### ❌ 動かない方法
+
+```bash
+# これだけでは動きません（GitHub Issue #9699, #551）
+docker run -e ANTHROPIC_API_KEY=sk-ant-xxx vibe-kanban
+```
+
+**問題**：
+- API keyを設定しても`/login`を要求される
+- 非対話モードで"Invalid API key"エラー
+- Docker/CI環境での認証が未完成
+
+#### ✅ 動作する方法
+
+**方法1: OAuth Token（推奨）**
+
+```bash
+# ホストで長期トークンを生成
+npx @anthropic-ai/claude-code setup-token
+# トークンがコピーされます
+
+# Docker実行時にトークンを渡す
+docker run -d \
+  --name vibe-kanban \
+  -p 3000:3000 \
+  -e CLAUDE_CODE_OAUTH_TOKEN=<生成されたトークン> \
+  -v ~/projects:/repos:rw \
+  vibe-kanban:latest
+```
+
+**方法2: 設定ファイルマウント**
+
+```bash
+# ホストで認証（一度だけ）
+npx @anthropic-ai/claude-code
+# ~/.claude/settings.json が作成される
+
+# Docker実行時に設定ファイルをマウント
+docker run -d \
+  --name vibe-kanban \
+  -p 3000:3000 \
+  -v ~/.claude:/root/.claude:ro \
+  -v ~/projects:/repos:rw \
+  vibe-kanban:latest
+```
+
+**方法3: API key + 設定ファイル併用（実験的）**
+
+```bash
+# ANTHROPIC_API_KEYと設定ファイルを両方渡す
+docker run -d \
+  --name vibe-kanban \
+  -p 3000:3000 \
+  -e ANTHROPIC_API_KEY=sk-ant-xxx \
+  -v ~/.claude:/root/.claude:rw \
+  -v ~/projects:/repos:rw \
+  vibe-kanban:latest
+```
+
+### Gemini CLIの場合（比較的シンプル）
+
+```bash
+docker run -d \
+  -e GEMINI_API_KEY=your-gemini-key \
+  vibe-kanban:latest
+```
+
+Google AI Studio で取得したAPI keyを使用。Claude Codeより認証はシンプル。
+
+### OpenAI Codexの場合
+
+```bash
+docker run -d \
+  -e OPENAI_API_KEY=sk-your-openai-key \
+  vibe-kanban:latest
+```
+
+OpenAI Platform で取得したAPI keyを使用。
+
+### GitHub Copilotの場合（設定ファイル必要の可能性）
+
+```bash
+# 方法1: GitHub Token
+docker run -d \
+  -e GITHUB_TOKEN=ghp_xxx \
+  vibe-kanban:latest
+
+# 方法2: 設定ファイルマウント（より確実）
+docker run -d \
+  -v ~/.config/github-copilot:/root/.config/github-copilot:ro \
+  vibe-kanban:latest
+```
+
+GitHub Copilot CLIは設定ファイルに依存する場合があります。
+
+### 複数エージェントを同時に使う場合
 
 ```bash
 docker run -d \
   --name vibe-kanban \
   -p 3000:3000 \
-  -e ANTHROPIC_API_KEY=sk-ant-your-key \
+  -e CLAUDE_CODE_OAUTH_TOKEN=<トークン> \
   -e GEMINI_API_KEY=your-gemini-key \
   -e OPENAI_API_KEY=sk-your-openai-key \
+  -v ~/.claude:/root/.claude:ro \
   -v ~/projects:/repos:rw \
   vibe-kanban:latest
 ```
-
-### Claude Codeの場合
-
-**Option 1: API key（推奨）**
-```bash
--e ANTHROPIC_API_KEY=sk-ant-xxx
-```
-
-**Option 2: Claude Pro/Maxサブスクリプション**
-- ❌ コンテナ環境では使用不可
-- ブラウザ認証が必要なため
-
-### Gemini CLIの場合
-
-```bash
--e GEMINI_API_KEY=your-gemini-key
-```
-
-Google AIのAPI keyを使用
-
-### GitHub Copilot
-
-```bash
--e GITHUB_TOKEN=ghp_xxx
-```
-
-GitHubパーソナルアクセストークン
 
 ## 必要な環境
 
@@ -388,8 +461,9 @@ my-project/
    - npxが自動管理
    - バージョンもコードで管理
 
-3. **認証はAPI keyのみ（Docker実行の場合）**
-   - 環境変数で渡す
+3. **Docker環境での認証は複雑**
+   - Claude Code: OAuth tokenまたは設定ファイルマウント推奨
+   - Gemini/OpenAI: API keyで比較的シンプル
    - ブラウザ認証は不可
 
 4. **git worktreeによるタスク隔離**
@@ -400,28 +474,49 @@ my-project/
    - ボリュームマウント
    - エージェント自体は不要
 
-### クイックスタート
+### クイックスタート（Claude Code + Gemini CLI）
 
 ```bash
-# 1. API keyを準備
-export ANTHROPIC_API_KEY=sk-ant-your-key
+# 1. Claude Code用のOAuth tokenを生成
+npx @anthropic-ai/claude-code setup-token
+# トークンをコピー
+
+# 2. API keyを準備
+export CLAUDE_CODE_OAUTH_TOKEN=<生成されたトークン>
 export GEMINI_API_KEY=your-gemini-key
 
-# 2. vibe-kanbanを起動
+# 3. vibe-kanbanを起動
 docker run -d \
   --name vibe-kanban \
   -p 3000:3000 \
-  -e ANTHROPIC_API_KEY \
+  -e CLAUDE_CODE_OAUTH_TOKEN \
   -e GEMINI_API_KEY \
   -v ~/projects/my-app:/repos/my-app:rw \
   --user $(id -u):$(id -g) \
   vibe-kanban:latest
 
-# 3. ブラウザでアクセス
+# 4. ブラウザでアクセス
 # http://localhost:3000
 
-# 4. タスクを作成してエージェントを選択
+# 5. タスクを作成してエージェントを選択
 # エージェントCLIは自動的にダウンロード・実行される
+```
+
+**代替案**: 設定ファイルマウント方式
+
+```bash
+# 1. ホストで一度認証（一度だけ）
+npx @anthropic-ai/claude-code
+
+# 2. vibe-kanbanを起動（設定ファイルをマウント）
+docker run -d \
+  --name vibe-kanban \
+  -p 3000:3000 \
+  -e GEMINI_API_KEY=your-gemini-key \
+  -v ~/.claude:/root/.claude:ro \
+  -v ~/projects/my-app:/repos/my-app:rw \
+  --user $(id -u):$(id -g) \
+  vibe-kanban:latest
 ```
 
 これで正しいアーキテクチャの理解ができました！ 🎯

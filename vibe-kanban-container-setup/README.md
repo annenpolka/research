@@ -97,24 +97,43 @@ vibe-kanbanは複数のAIコーディングエージェント（Claude Code、Ge
 
 **クイックスタート**:
 
+⚠️ **注意**: Docker環境でのClaude Code認証は複雑です。詳細は [ARCHITECTURE.md](ARCHITECTURE.md) を参照。
+
 ```bash
-# 1. API keyを準備
-export ANTHROPIC_API_KEY=sk-ant-your-key
+# 方法1: OAuth Token使用（推奨）
+# 1-1. Claude Code用トークンを生成
+npx @anthropic-ai/claude-code setup-token
+
+# 1-2. トークンとAPI keyを準備
+export CLAUDE_CODE_OAUTH_TOKEN=<生成されたトークン>
 export GEMINI_API_KEY=your-gemini-key
 
-# 2. コンテナ起動（API key自動設定）
+# 1-3. コンテナ起動
 docker run -d \
   --name vibe-kanban \
   -p 3000:3000 \
-  -e ANTHROPIC_API_KEY \
+  -e CLAUDE_CODE_OAUTH_TOKEN \
   -e GEMINI_API_KEY \
   -v ~/projects/my-app:/repos/my-app:rw \
+  --user $(id -u):$(id -g) \
   vibe-kanban:latest
 
-# 3. ブラウザでアクセス
-# http://localhost:3000
+# 方法2: 設定ファイルマウント（より簡単）
+# 2-1. ホストで一度認証
+npx @anthropic-ai/claude-code
 
-# エージェントCLIは自動的にダウンロード・実行されます
+# 2-2. コンテナ起動（設定ファイルをマウント）
+docker run -d \
+  --name vibe-kanban \
+  -p 3000:3000 \
+  -e GEMINI_API_KEY=your-gemini-key \
+  -v ~/.claude:/root/.claude:ro \
+  -v ~/projects/my-app:/repos/my-app:rw \
+  --user $(id -u):$(id -g) \
+  vibe-kanban:latest
+
+# ブラウザでアクセス
+# http://localhost:3000
 ```
 
 ### ホストからの認証情報の引き継ぎ
