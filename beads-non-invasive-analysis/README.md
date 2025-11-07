@@ -105,6 +105,147 @@ READMEとAGENTS.mdによると、以下の手順が推奨されています:
 
 これは、意図的に「非侵襲的」な設計を採用していると言える。
 
+### 完全ローカル運用モードの場合の推奨追記
+
+`.beads/`をgitignoreに追加して完全ローカル運用する場合、AGENTS.mdには以下のように記載することを推奨します：
+
+#### パターン1: 簡潔版（推奨）
+
+```markdown
+## Beads Issue Tracker（ローカルのみ）
+
+このプロジェクトでは、beads issue trackerを完全ローカルモードで使用しています。
+
+### 初回セットアップ（エージェント向け）
+
+beadsがまだ初期化されていない場合:
+
+1. 初期化: `bd init --skip-merge-driver --quiet`
+2. 確認: `.beads/`が`.gitignore`に含まれていることを確認
+3. 使用開始: `bd create "タスク名" -p 1 --json`
+
+### 基本コマンド
+
+- タスク作成: `bd create "タスク名" -p <優先度> --json`
+- 準備完了タスク: `bd ready --json`
+- タスク更新: `bd update bd-<ID> --status in_progress --json`
+- タスク完了: `bd close bd-<ID> --reason "Completed" --json`
+- 一覧表示: `bd list --json`
+
+### 重要事項
+
+- **ローカルのみ**: `.beads/`はgitignoreされており、コミット対象外
+- **同期なし**: このマシンでのみデータが保持されます
+- **git操作**: 通常通りコミット・プッシュできます（beadsは影響なし）
+```
+
+#### パターン2: 詳細版
+
+```markdown
+## Beads Issue Tracker（完全ローカル運用）
+
+このプロジェクトでは、beads issue trackerを使用していますが、**完全にローカルのみ**で動作します。
+
+### セットアップ状態
+
+- ✅ `.beads/`ディレクトリはgitignoreされています
+- ✅ コミット対象には含まれません
+- ✅ 他のマシンや他のエージェントとは同期されません
+
+### エージェント向け初期化手順
+
+beadsが初期化されていない場合、以下を実行:
+
+```bash
+# 1. 初期化（静かモード）
+bd init --skip-merge-driver --quiet
+
+# 2. .gitignoreに含まれているか確認
+grep ".beads/" .gitignore
+
+# 3. gitで無視されているか確認
+git status | grep -q ".beads" && echo "WARNING: .beads/ is tracked!" || echo "OK: .beads/ is ignored"
+```
+
+### ワークフロー
+
+**タスク管理のベストプラクティス:**
+
+1. **セッション開始時**
+   ```bash
+   bd ready --json  # 準備完了のタスクを確認
+   ```
+
+2. **作業中**
+   ```bash
+   bd create "実装: 機能X" -p 1 --deps discovered-from:bd-Y --json
+   bd update bd-Z --status in_progress --json
+   ```
+
+3. **タスク完了時**
+   ```bash
+   bd close bd-Z --reason "実装完了、テスト済み" --json
+   ```
+
+4. **セッション終了時**
+   - 通常のgit操作のみ（`bd sync`は不要）
+   - `.beads/`は自動的に除外される
+
+### 制限事項
+
+- ❌ 他のマシンとの同期不可
+- ❌ チームメンバーとの共有不可
+- ❌ マシン変更時はデータ消失
+- ✅ ただし、このプロジェクトは単一マシン・単一エージェント想定のため問題なし
+
+### トラブルシューティング
+
+`.beads/`がgitに追加されてしまった場合:
+
+```bash
+git rm -r --cached .beads/
+echo ".beads/" >> .gitignore
+git add .gitignore
+git commit -m "Ensure .beads/ is ignored"
+```
+```
+
+#### パターン3: 最小版
+
+AGENTS.mdが既に詳細なガイドを含んでいる場合、最小限の追記で済ませる:
+
+```markdown
+## Beads Issue Tracker
+
+このプロジェクトではbeadsをローカルのみで使用しています。
+
+初期化されていない場合: `bd init --skip-merge-driver --quiet`
+
+基本コマンド: `bd create "タスク" --json` / `bd ready --json` / `bd list --json`
+
+注意: `.beads/`はgitignoreされており、コミット対象外です。
+```
+
+### 推奨
+
+- **新規プロジェクト**: パターン1（簡潔版）
+- **複雑なワークフロー**: パターン2（詳細版）
+- **既存AGENTS.md**: パターン3（最小版）を追記
+
+### 完全に追記しない選択肢
+
+AGENTS.mdに一切追記せず、必要に応じてエージェントに口頭（チャット）で指示する方法もあります:
+
+**メリット:**
+- ✅ AGENTS.mdへの変更ゼロ（完全非侵襲）
+- ✅ 柔軟性が高い
+
+**デメリット:**
+- ❌ エージェントがbeadsの存在を知らない
+- ❌ 毎回説明が必要
+
+この方法は、「試験的にbeadsを使ってみたい」場合に適しています。
+
 ## 初期化プロセスの詳細
 
 ### `bd init`が実行すること
