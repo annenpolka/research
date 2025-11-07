@@ -4,7 +4,13 @@
 
 ## 🚀 超速セットアップ（対話式）
 
-quick-setup.shは対話的な入力が必要なため、以下の手順で実行してください：
+### 真のワンライナー
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/annenpolka/research/main/vibe-kanban-container-setup/quick-setup.sh | bash
+```
+
+### または、ダウンロードして実行
 
 ```bash
 # スクリプトをダウンロード
