@@ -4,13 +4,13 @@
       "Read",
       "Glob",
       "Grep",
-      "Bash(ls *)",
+      "Bash(ls :*)",
       "Bash(pwd)",
       "Bash(git status)",
-      "Bash(git diff *)",
-      "Bash(git log *)",
-      "Bash(npm run *)",
-      "Bash(pytest *)",
+      "Bash(git diff :*)",
+      "Bash(git log :*)",
+      "Bash(npm run :*)",
+      "Bash(pytest :*)",
       "Write",
       "Edit"
     ],
@@ -18,8 +18,8 @@
       "Read(.env)",
       "Read(.env.*)",
       "Read(secrets/**)",
-      "Bash(rm -rf *)",
-      "Bash(dd *)"
+      "Bash(rm -rf :*)",
+      "Bash(dd :*)"
     ]
   }
 }

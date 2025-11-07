@@ -49,7 +49,7 @@ JSONが正しいか確認（カンマ、括弧など）。
       "Read",
       "Glob",
       "Grep",
-      "Bash(ls *)",
+      "Bash(ls :*)",
       "Bash(pwd)",
       "Bash(git status)"
     ]
@@ -68,13 +68,13 @@ JSONが正しいか確認（カンマ、括弧など）。
       "Edit",
       "Glob",
       "Grep",
-      "Bash(git *)",
-      "Bash(npm *)"
+      "Bash(git :*)",
+      "Bash(npm :*)"
     ],
     "deny": [
       "Read(.env*)",
       "Write(.env*)",
-      "Bash(rm -rf *)"
+      "Bash(rm -rf :*)"
     ]
   }
 }
@@ -103,9 +103,9 @@ JSONが正しいか確認（カンマ、括弧など）。
       "Read",
       "Write(*.py)",
       "Edit(*.py)",
-      "Bash(pytest *)",
-      "Bash(python -m *)",
-      "Bash(pip install *)"
+      "Bash(pytest :*)",
+      "Bash(python -m :*)",
+      "Bash(pip install :*)"
     ]
   }
 }
@@ -120,10 +120,10 @@ JSONが正しいか確認（カンマ、括弧など）。
       "Read",
       "Write(src/**)",
       "Edit(src/**)",
-      "Bash(npm *)",
-      "Bash(yarn *)",
+      "Bash(npm :*)",
+      "Bash(yarn :*)",
       "Bash(git status)",
-      "Bash(git diff *)"
+      "Bash(git diff :*)"
     ]
   }
 }
@@ -138,9 +138,9 @@ JSONが正しいか確認（カンマ、括弧など）。
       "Read",
       "Write(src/**)",
       "Edit(src/**)",
-      "Bash(cargo *)",
-      "Bash(rustc *)",
-      "Bash(git *)"
+      "Bash(cargo :*)",
+      "Bash(rustc :*)",
+      "Bash(git :*)"
     ]
   }
 }
@@ -155,8 +155,8 @@ JSONが正しいか確認（カンマ、括弧など）。
       "Read",
       "Write(*.go)",
       "Edit(*.go)",
-      "Bash(go *)",
-      "Bash(git *)"
+      "Bash(go :*)",
+      "Bash(git :*)"
     ]
   }
 }
@@ -201,7 +201,7 @@ jq . .claude/settings.json
 ### 一時的にバイパス（コマンドライン）
 
 ```bash
-claude-code --allowedTools "Read,Write,Bash(git *)"
+claude-code --allowedTools "Read,Write,Bash(git :*)"
 ```
 
 ### 設定の優先順位を確認

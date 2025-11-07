@@ -23,13 +23,13 @@ Claude Codeには、ユーザーの確認なしに特定のツールやコマン
       "Read",
       "Glob",
       "Grep",
-      "Bash(ls *)",
+      "Bash(ls :*)",
       "Bash(pwd)",
       "Bash(git status)",
-      "Bash(git diff *)",
-      "Bash(git log *)",
-      "Bash(npm run *)",
-      "Bash(pytest *)",
+      "Bash(git diff :*)",
+      "Bash(git log :*)",
+      "Bash(npm run :*)",
+      "Bash(pytest :*)",
       "Write",
       "Edit"
     ],
@@ -37,8 +37,8 @@ Claude Codeには、ユーザーの確認なしに特定のツールやコマン
       "Read(.env)",
       "Read(.env.*)",
       "Read(secrets/**)",
-      "Bash(rm -rf *)",
-      "Bash(dd *)"
+      "Bash(rm -rf :*)",
+      "Bash(dd :*)"
     ]
   }
 }
@@ -48,7 +48,7 @@ Claude Codeには、ユーザーの確認なしに特定のツールやコマン
 
 - **基本ツール**: `"Read"`, `"Write"`, `"Edit"`, `"Glob"`, `"Grep"`
 - **Bashコマンド**: `"Bash(git status)"` - 特定のコマンドのみ
-- **ワイルドカード**: `"Bash(git *)"` - git関連のすべてのコマンド
+- **ワイルドカード**: `"Bash(git :*)"` - git関連のすべてのコマンド
 - **ファイルパターン**: `"Read(*.md)"` - 特定の拡張子のみ
 - **ディレクトリ**: `"Read(docs/**)"` - docsディレクトリ配下すべて
 
@@ -91,7 +91,7 @@ claude-code --dangerously-skip-permissions
 または特定のツールのみ：
 
 ```bash
-claude-code --allowedTools "Read,Write,Bash(git *)"
+claude-code --allowedTools "Read,Write,Bash(git :*)"
 ```
 
 ## 方法3: PreToolUseフック（高度）
@@ -204,10 +204,10 @@ Claude Codeは以下の順序で設定を読み込みます（後のものが優
       "Read",
       "Glob",
       "Grep",
-      "Bash(ls *)",
-      "Bash(find *)",
-      "Bash(cat *)",
-      "Bash(git *)"
+      "Bash(ls :*)",
+      "Bash(find :*)",
+      "Bash(cat :*)",
+      "Bash(git :*)"
     ]
   }
 }
@@ -224,18 +224,18 @@ npm/yarn/gitコマンドを自動許可：
       "Read",
       "Write(src/**)",
       "Edit(src/**)",
-      "Bash(npm *)",
-      "Bash(yarn *)",
+      "Bash(npm :*)",
+      "Bash(yarn :*)",
       "Bash(git status)",
-      "Bash(git diff *)",
-      "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git diff :*)",
+      "Bash(git add :*)",
+      "Bash(git commit :*)"
     ],
     "deny": [
       "Write(.env*)",
       "Edit(.env*)",
-      "Bash(rm *)",
-      "Bash(git push --force *)"
+      "Bash(rm :*)",
+      "Bash(git push --force :*)"
     ]
   }
 }
@@ -252,10 +252,10 @@ pytest、pip、仮想環境を許可：
       "Read",
       "Write(*.py)",
       "Edit(*.py)",
-      "Bash(pytest *)",
-      "Bash(python -m *)",
-      "Bash(pip install *)",
-      "Bash(source venv/*)"
+      "Bash(pytest :*)",
+      "Bash(python -m :*)",
+      "Bash(pip install :*)",
+      "Bash(source :*)"
     ]
   }
 }
@@ -277,12 +277,12 @@ pytest、pip、仮想環境を許可：
 {
   "permissions": {
     "deny": [
-      "Bash(rm -rf *)",
-      "Bash(dd *)",
-      "Bash(mkfs *)",
-      "Bash(format *)",
-      "Bash(git push --force *)",
-      "Bash(sudo *)",
+      "Bash(rm -rf :*)",
+      "Bash(dd :*)",
+      "Bash(mkfs :*)",
+      "Bash(format :*)",
+      "Bash(git push --force :*)",
+      "Bash(sudo :*)",
       "Read(.env*)",
       "Read(**/secrets/**)",
       "Read(**/.git/config)",
