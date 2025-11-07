@@ -99,10 +99,10 @@ if git status --porcelain | grep -q "^?? \.beads/"; then
 fi
 echo -e "${GREEN}✓ .beads/ はgitで無視されています${NC}"
 
-# 7. ユーザー設定（~/.claude/AGENTS.md）に設定を追記
+# 7. ユーザー設定（~/.claude/CLAUDE.md）に設定を追記
 echo -e "${YELLOW}[7/7]${NC} ユーザー設定にbeads設定を追記中..."
 CLAUDE_CONFIG_DIR="$HOME/.claude"
-AGENTS_MD="$CLAUDE_CONFIG_DIR/AGENTS.md"
+CLAUDE_MD="$CLAUDE_CONFIG_DIR/CLAUDE.md"
 
 # ~/.claudeディレクトリがなければ作成
 if [ ! -d "$CLAUDE_CONFIG_DIR" ]; then
@@ -110,15 +110,15 @@ if [ ! -d "$CLAUDE_CONFIG_DIR" ]; then
     echo -e "${GREEN}✓ $CLAUDE_CONFIG_DIR を作成しました${NC}"
 fi
 
-# AGENTS.mdに追記すべき内容
+# CLAUDE.mdに追記すべき内容
 BEADS_SECTION_MARKER="## Issue Tracking with bd (beads)"
 
 # 既に設定が存在するかチェック
-if [ -f "$AGENTS_MD" ] && grep -q "$BEADS_SECTION_MARKER" "$AGENTS_MD"; then
-    echo -e "${BLUE}ℹ ~/.claude/AGENTS.md には既にbeads設定が含まれています（スキップ）${NC}"
+if [ -f "$CLAUDE_MD" ] && grep -q "$BEADS_SECTION_MARKER" "$CLAUDE_MD"; then
+    echo -e "${BLUE}ℹ ~/.claude/CLAUDE.md には既にbeads設定が含まれています（スキップ）${NC}"
 else
-    # AGENTS.mdに追記
-    cat >> "$AGENTS_MD" << 'EOF'
+    # CLAUDE.mdに追記
+    cat >> "$CLAUDE_MD" << 'EOF'
 
 ## Issue Tracking with bd (beads)
 
@@ -237,7 +237,7 @@ git status
 
 EOF
 
-    echo -e "${GREEN}✓ ~/.claude/AGENTS.md にbeads設定を追記しました${NC}"
+    echo -e "${GREEN}✓ ~/.claude/CLAUDE.md にbeads設定を追記しました${NC}"
 fi
 
 # 成功メッセージ
