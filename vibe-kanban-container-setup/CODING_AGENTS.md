@@ -36,21 +36,36 @@ npx -y @anthropic-ai/claude-code@2.0.31
 
 ## サポートされているコーディングエージェント
 
-vibe-kanbanは以下のAIコーディングエージェントをサポートしています：
+vibe-kanbanは以下の9種類のAIコーディングエージェントをサポートしています（公式ドキュメント確認済み）：
 
 ### 主要エージェント
 
 1. **Claude Code** - Anthropic製のコーディングアシスタント
 2. **Gemini CLI** - Google製のコマンドラインAIツール
-3. **Cursor CLI** - Cursor IDEのコマンドラインインターフェース
-4. **GitHub Copilot CLI** - GitHubのAIペアプログラマー
-5. **OpenCode** - オープンソースのコーディングAI
-6. **OpenAI Codex** - OpenAI製のコード生成AI
-7. **Amp** - コーディングエージェントツール
+3. **OpenAI Codex** - OpenAI製のコード生成AI
+4. **GitHub Copilot** - GitHubのAIペアプログラマー
+5. **Amp Code** - コーディングエージェントツール
+6. **Cursor Agent** - Cursor IDEのコマンドラインインターフェース
+7. **SST OpenCode** - オープンソースのコーディングAI
+8. **Claude Code Router** - 複数モデルを調整する高度なエージェント
+9. **Qwen Code** - Qwen製のコーディングAI
 
-### 重要な前提条件
+### エージェントプロファイル（バリアント）
 
-⚠️ **vibe-kanbanを起動する前に、使用したい各エージェントで認証を完了させておく必要があります。**
+vibe-kanbanでは、Settings → Agents で各エージェントのプロファイルを管理できます：
+
+- **DEFAULT**: 標準設定
+- **PLAN**: 計画・設計用の設定
+- **FLASH**: 高速実行用の設定
+
+各バリアントでモデル選択、サンドボックスレベル、承認設定などをカスタマイズ可能。
+
+### 重要な前提条件（Docker実行の場合）
+
+⚠️ **コンテナ環境では、API keyを環境変数で渡す必要があります。**
+
+- ✅ ホスト実行（`npx vibe-kanban`）: ブラウザ認証フローが使える
+- ❌ Docker実行: ブラウザ認証は不可、API keyのみ
 
 vibe-kanbanは各エージェントを統合・管理するためのオーケストレーションツールであり、エージェント自体の認証機能は提供していません。
 

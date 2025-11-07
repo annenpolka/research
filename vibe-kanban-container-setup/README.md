@@ -36,13 +36,26 @@ vibe-kanbanは、Claude Code、Gemini CLI、Codex、Ampなどの複数のAIコ�
 
 ### 環境変数
 
-実行時に設定可能な主要な環境変数：
+#### ビルド時変数
 
-- `BACKEND_PORT`: バックエンドポート（デフォルト: 自動割り当て）
+- `GITHUB_CLIENT_ID`: GitHub OAuth認証用クライアントID（デフォルト: `Ov23li9bxz3kKfPOIsGm`）
+- `POSTHOG_API_KEY`: PostHog分析用APIキー
+- `POSTHOG_API_ENDPOINT`: PostHog分析エンドポイント
+
+#### ランタイム変数
+
+**vibe-kanban設定**:
+- `BACKEND_PORT`: バックエンドポート（デフォルト: 0 = 自動割り当て）
 - `FRONTEND_PORT`: フロントエンドポート（デフォルト: 3000）
-- `HOST`: ホストアドレス（デフォルト: 127.0.0.1）
-- `GITHUB_CLIENT_ID`: GitHub OAuth認証（ビルド時）
-- `POSTHOG_API_KEY`: PostHog分析（ビルド時）
+- `HOST`: ホストアドレス（デフォルト: 127.0.0.1、Docker実行時は0.0.0.0推奨）
+- `DISABLE_WORKTREE_ORPHAN_CLEANUP`: git worktreeの自動クリーンアップを無効化（デバッグ用）
+
+**エージェント認証**:
+- `ANTHROPIC_API_KEY`: Claude Code用APIキー
+- `GEMINI_API_KEY`: Gemini CLI用APIキー
+- `OPENAI_API_KEY`: OpenAI Codex用APIキー
+- `GITHUB_TOKEN`: GitHub Copilot用パーソナルアクセストークン
+- `CURSOR_API_KEY`: Cursor Agent用APIキー
 
 ### コーディングエージェントの設定（ソースコード確認済み）
 
@@ -115,6 +128,31 @@ vibe-kanbanをコンテナで実行する際、SSH鍵やGit認証情報など、
 - GitHub OAuth設定
 - Docker Secrets / Kubernetes Secrets の使用
 - セキュリティベストプラクティス
+
+### 🌳 git worktreeによるタスク隔離機能
+
+vibe-kanbanの最も重要な機能の一つは、**各タスクが独立したgit worktreeで実行される**ことです。
+
+#### 主な利点
+
+✅ **タスク間の干渉なし**
+- 各タスクは専用のgit worktreeで実行
+- タスクAの変更がタスクBに影響しない
+- 複数の機能を同時開発可能
+
+✅ **安全な実験**
+- 失敗したタスクは破棄するだけ
+- メインブランチは常にクリーンな状態
+
+✅ **並列実行の効率化**
+- Claude CodeとGemini CLIを同時に異なるタスクで実行
+- 複数エージェントでタスクを並列処理
+
+✅ **コンテキスト隔離**
+- あるタスクのAIが別タスクのファイルを参照しない
+- エージェントのコンテキストが純粋に保たれる
+
+詳細なアーキテクチャについては、**[ARCHITECTURE.md](ARCHITECTURE.md)** の「git worktreeによるタスク隔離」セクションを参照してください。
 
 ### コンテナ内でプロジェクトを扱う方法
 
