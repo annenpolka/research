@@ -4,6 +4,52 @@
 
 このプロジェクトは、[steveyegge/beads](https://github.com/steveyegge/beads) リポジトリがリポジトリや指示ファイル（AGENTS.md等）に対して非侵襲的な方法をサポートしているかをコードレベルで調査したものです。
 
+## 🚀 クイックスタート
+
+### 方法1: ワンライナー実行（推奨）
+
+**任意のプロジェクトディレクトリで、以下をコピー&ペーストして実行：**
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/annenpolka/research/claude/beads-one-shot-creation-011CUsyUYT2DcKF4rhqzzHhD/beads-non-invasive-analysis/setup-beads-local.sh)
+```
+
+### 方法2: スクリプトをダウンロードして実行
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/annenpolka/research/claude/beads-one-shot-creation-011CUsyUYT2DcKF4rhqzzHhD/beads-non-invasive-analysis/setup-beads-local.sh -o setup-beads-local.sh
+chmod +x setup-beads-local.sh
+./setup-beads-local.sh
+```
+
+### 方法3: このリポジトリをクローンして実行
+
+```bash
+git clone https://github.com/annenpolka/research.git
+cd research/beads-non-invasive-analysis
+./setup-beads-local.sh
+```
+
+---
+
+### スクリプトの動作内容
+
+このスクリプトは以下を自動的に実行します：
+- beadsの初期化（`bd init --skip-merge-driver --quiet`）
+- `.git/info/exclude` への `.beads/` の追加
+- `.gitattributes` のクリーンアップ
+- セットアップの検証
+- **ユーザー設定（~/.claude/CLAUDE.md）への設定追記**（重複チェック付き）
+
+### 特徴
+
+- ✅ リポジトリのファイル構造に変更なし
+- ✅ コミット対象が増えない
+- ✅ 完全にローカルのみで動作
+- ✅ 非侵襲的な設計
+- ✅ ユーザーのグローバル設定に自動追記（重複なし）
+- ✅ どのプロジェクトディレクトリでも実行可能
+
 ## 調査日
 
 2025-11-07
