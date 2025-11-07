@@ -246,6 +246,187 @@ AGENTS.mdに一切追記せず、必要に応じてエージェントに口頭�
 
 この方法は、「試験的にbeadsを使ってみたい」場合に適しています。
 
+### `bd onboard`が出力する内容
+
+**重要**: `bd onboard`は**AGENTS.mdに直接書き込みを行いません**。代わりに、標準出力に以下の内容を表示し、ユーザーが手動でコピー&ペーストすることを想定しています。
+
+<details>
+<summary><b>bd onboardの完全な出力内容（クリックして展開）</b></summary>
+
+```markdown
+## Issue Tracking with bd (beads)
+
+**IMPORTANT**: This project uses **bd (beads)** for ALL issue tracking. Do NOT use markdown TODOs, task lists, or other tracking methods.
+
+### Why bd?
+
+- Dependency-aware: Track blockers and relationships between issues
+- Git-friendly: Auto-syncs to JSONL for version control
+- Agent-optimized: JSON output, ready work detection, discovered-from links
+- Prevents duplicate tracking systems and confusion
+
+### Quick Start
+
+**Check for ready work:**
+```bash
+bd ready --json
+```
+
+**Create new issues:**
+```bash
+bd create "Issue title" -t bug|feature|task -p 0-4 --json
+bd create "Issue title" -p 1 --deps discovered-from:bd-123 --json
+```
+
+**Claim and update:**
+```bash
+bd update bd-42 --status in_progress --json
+bd update bd-42 --priority 1 --json
+```
+
+**Complete work:**
+```bash
+bd close bd-42 --reason "Completed" --json
+```
+
+### Issue Types
+
+- `bug` - Something broken
+- `feature` - New functionality
+- `task` - Work item (tests, docs, refactoring)
+- `epic` - Large feature with subtasks
+- `chore` - Maintenance (dependencies, tooling)
+
+### Priorities
+
+- `0` - Critical (security, data loss, broken builds)
+- `1` - High (major features, important bugs)
+- `2` - Medium (default, nice-to-have)
+- `3` - Low (polish, optimization)
+- `4` - Backlog (future ideas)
+
+### Workflow for AI Agents
+
+1. **Check ready work**: `bd ready` shows unblocked issues
+2. **Claim your task**: `bd update <id> --status in_progress`
+3. **Work on it**: Implement, test, document
+4. **Discover new work?** Create linked issue:
+   - `bd create "Found bug" -p 1 --deps discovered-from:<parent-id>`
+5. **Complete**: `bd close <id> --reason "Done"`
+6. **Commit together**: Always commit the `.beads/issues.jsonl` file together with the code changes so issue state stays in sync with code state
+
+### Auto-Sync
+
+bd automatically syncs with git:
+- Exports to `.beads/issues.jsonl` after changes (5s debounce)
+- Imports from JSONL when newer (e.g., after `git pull`)
+- No manual export/import needed!
+
+### MCP Server (Recommended)
+
+If using Claude or MCP-compatible clients, install the beads MCP server:
+
+```bash
+pip install beads-mcp
+```
+
+Add to MCP config (e.g., `~/.config/claude/config.json`):
+```json
+{
+  "beads": {
+    "command": "beads-mcp",
+    "args": []
+  }
+}
+```
+
+Then use `mcp__beads__*` functions instead of CLI commands.
+
+### Managing AI-Generated Planning Documents
+
+AI assistants often create planning and design documents during development:
+- PLAN.md, IMPLEMENTATION.md, ARCHITECTURE.md
+- DESIGN.md, CODEBASE_SUMMARY.md, INTEGRATION_PLAN.md
+- TESTING_GUIDE.md, TECHNICAL_DESIGN.md, and similar files
+
+**Best Practice: Use a dedicated directory for these ephemeral files**
+
+**Recommended approach:**
+- Create a `history/` directory in the project root
+- Store ALL AI-generated planning/design docs in `history/`
+- Keep the repository root clean and focused on permanent project files
+- Only access `history/` when explicitly asked to review past planning
+
+**Example .gitignore entry (optional):**
+```
+# AI planning documents (ephemeral)
+history/
+```
+
+**Benefits:**
+- ✅ Clean repository root
+- ✅ Clear separation between ephemeral and permanent documentation
+- ✅ Easy to exclude from version control if desired
+- ✅ Preserves planning history for archeological research
+- ✅ Reduces noise when browsing the project
+
+### Important Rules
+
+- ✅ Use bd for ALL task tracking
+- ✅ Always use `--json` flag for programmatic use
+- ✅ Link discovered work with `discovered-from` dependencies
+- ✅ Check `bd ready` before asking "what should I work on?"
+- ✅ Store AI planning docs in `history/` directory
+- ❌ Do NOT create markdown TODO lists
+- ❌ Do NOT use external issue trackers
+- ❌ Do NOT duplicate tracking systems
+- ❌ Do NOT clutter repo root with planning documents
+
+For more details, see README.md and QUICKSTART.md.
+```
+
+</details>
+
+### 完全ローカル運用時の調整点
+
+上記の`bd onboard`出力内容は、git同期を前提としています。完全ローカル運用（`.beads/`をgitignore）の場合、以下のセクションは**不要または調整が必要**です:
+
+#### 削除/調整すべき箇所
+
+1. **"Commit together"の記述（ステップ6）**
+   ```markdown
+   6. **Commit together**: Always commit the `.beads/issues.jsonl` file together with the code changes so issue state stays in sync with code state
+   ```
+   → **削除**: `.beads/`はgitignoreされているため不要
+
+2. **"Auto-Sync"セクション全体**
+   ```markdown
+   ### Auto-Sync
+
+   bd automatically syncs with git:
+   - Exports to `.beads/issues.jsonl` after changes (5s debounce)
+   - Imports from JSONL when newer (e.g., after `git pull`)
+   - No manual export/import needed!
+   ```
+   → **削除または注記追加**: 「このプロジェクトではローカルのみで使用しており、git同期は行いません」
+
+3. **"Why bd?"の"Git-friendly"**
+   ```markdown
+   - Git-friendly: Auto-syncs to JSONL for version control
+   ```
+   → **調整**: 「ローカルで動作し、gitには影響しません」
+
+### 完全ローカル運用向けの簡略版
+
+`bd onboard`の出力をそのまま使わず、前述の**パターン1（簡潔版）**を推奨します。理由：
+
+- ✅ ローカル運用に最適化された内容
+- ✅ 不要な同期関連の説明がない
+- ✅ 簡潔で理解しやすい
+- ✅ 実際の使用方法に焦点を当てている
+
+**結論**: `bd onboard`は非侵襲的（ファイルを直接変更しない）ですが、その出力内容はgit同期を前提としているため、完全ローカル運用の場合は**使用せず、独自の簡略版を作成することを推奨**します。
+
 ## 初期化プロセスの詳細
 
 ### `bd init`が実行すること
