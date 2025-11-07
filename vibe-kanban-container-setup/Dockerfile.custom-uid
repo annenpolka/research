@@ -1,0 +1,46 @@
+# ホストのUID/GIDに合わせたカスタムDockerfile
+# パーミッション問題を解決するために使用
+
+# ベースイメージとしてvibe-kanbanを使用（事前にビルドが必要）
+ARG BASE_IMAGE=vibe-kanban:latest
+FROM ${BASE_IMAGE}
+
+# ビルド時にホストのUID/GIDを指定
+ARG UID=1000
+ARG GID=1000
+
+# rootユーザーに切り替え（一時的）
+USER root
+
+# 既存のappuserのUID/GIDを変更
+RUN set -ex && \
+    # 新しいGIDに変更
+    groupmod -g ${GID} appgroup 2>/dev/null || \
+    (groupadd -g ${GID} appgroup && usermod -g appgroup appuser) && \
+    # 新しいUIDに変更
+    usermod -u ${UID} appuser && \
+    # 所有権を更新
+    find / -user 1000 -exec chown -h appuser {} \; 2>/dev/null || true && \
+    find / -group 1000 -exec chgrp -h appgroup {} \; 2>/dev/null || true && \
+    # 重要なディレクトリの所有権を確実に更新
+    chown -R appuser:appgroup /app /repos /home/appuser 2>/dev/null || true
+
+# appuserに戻す
+USER appuser
+
+# 環境変数の設定（念のため）
+ENV PORT=3000
+ENV HOST=0.0.0.0
+
+# ポートの公開
+EXPOSE 3000
+
+# ヘルスチェック
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+
+# tiniをinitプロセスとして使用
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# アプリケーションの起動
+CMD ["/app/server"]

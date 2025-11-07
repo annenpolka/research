@@ -1,0 +1,124 @@
+# 開発環境用のDocker Compose設定
+# プロジェクトファイルをマウントして実際の開発に使用
+
+version: '3.8'
+
+services:
+  vibe-kanban:
+    build:
+      context: https://github.com/BloopAI/vibe-kanban.git
+      dockerfile: Dockerfile
+    image: vibe-kanban:latest
+    container_name: vibe-kanban-dev
+
+    # ポートマッピング
+    ports:
+      - "3000:3000"
+
+    # プロジェクトと認証情報のマウント
+    volumes:
+      # ========================================
+      # プロジェクトディレクトリ
+      # ========================================
+      # 以下のパスを実際のプロジェクトパスに変更してください
+
+      # 単一プロジェクトの例
+      - ${PROJECT_PATH:-~/projects/my-app}:/repos/my-app:rw
+
+      # 複数プロジェクトの例（必要に応じてコメントを外す）
+      # - ~/projects/project-a:/repos/project-a:rw
+      # - ~/projects/project-b:/repos/project-b:rw
+      # - ~/projects/project-c:/repos/project-c:rw
+
+      # プロジェクトディレクトリ全体（注意して使用）
+      # - ~/projects:/repos:rw
+
+      # ========================================
+      # SSH設定（読み取り専用）
+      # ========================================
+      - ${HOME}/.ssh/config:/home/appuser/.ssh/config:ro
+      - ${HOME}/.ssh/known_hosts:/home/appuser/.ssh/known_hosts:ro
+
+      # ========================================
+      # Git設定（読み取り専用）
+      # ========================================
+      - ${HOME}/.gitconfig:/home/appuser/.gitconfig:ro
+
+      # Git credentials（オプション）
+      # - ${HOME}/.git-credentials:/home/appuser/.git-credentials:ro
+
+    # 環境変数
+    environment:
+      - PORT=3000
+      - HOST=0.0.0.0
+
+      # SSHエージェント（Linux/Macの場合）
+      - SSH_AUTH_SOCK=${SSH_AUTH_SOCK}
+
+      # GitHub OAuth（オプション）
+      # - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      # - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+
+      # Git認証情報（オプション）
+      # - GIT_USERNAME=${GIT_USERNAME}
+      # - GIT_TOKEN=${GIT_TOKEN}
+
+    # ホストのUID/GIDを使用してパーミッション問題を回避
+    user: "${UID:-1000}:${GID:-1000}"
+
+    # リソース制限（開発環境向けに緩和）
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+    # セキュリティ設定（開発環境向けに緩和）
+    security_opt:
+      - no-new-privileges:true
+
+    # 開発環境では書き込み可能なファイルシステムを使用
+    # read_only: false
+
+    # 一時ファイル用のtmpfs
+    tmpfs:
+      - /tmp:size=200M,mode=1777
+
+    # ケーパビリティ（最小限）
+    cap_drop:
+      - ALL
+    # 必要に応じて追加
+    # cap_add:
+    #   - NET_BIND_SERVICE
+
+    # PID制限
+    pids_limit: 200
+
+    # ネットワーク設定
+    networks:
+      - vibe-dev-network
+
+    # ヘルスチェック
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    # 再起動ポリシー
+    restart: unless-stopped
+
+    # ログ設定
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  vibe-dev-network:
+    driver: bridge

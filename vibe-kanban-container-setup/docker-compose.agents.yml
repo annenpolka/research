@@ -1,0 +1,167 @@
+# コーディングエージェント用のDocker Compose設定
+# 複数のAIエージェントのAPI keyを環境変数で管理
+
+version: '3.8'
+
+services:
+  vibe-kanban:
+    build:
+      context: https://github.com/BloopAI/vibe-kanban.git
+      dockerfile: Dockerfile
+    image: vibe-kanban:latest
+    container_name: vibe-kanban-agents
+
+    # ポートマッピング
+    ports:
+      - "3000:3000"
+
+    # プロジェクトと認証情報のマウント
+    volumes:
+      # ========================================
+      # プロジェクトディレクトリ
+      # ========================================
+      - ${PROJECT_PATH:-~/projects/my-app}:/repos/my-app:rw
+
+      # 複数プロジェクトの場合（必要に応じてコメントを外す）
+      # - ~/projects/project-a:/repos/project-a:rw
+      # - ~/projects/project-b:/repos/project-b:rw
+
+      # ========================================
+      # SSH設定（読み取り専用）
+      # ========================================
+      - ${HOME}/.ssh/config:/home/appuser/.ssh/config:ro
+      - ${HOME}/.ssh/known_hosts:/home/appuser/.ssh/known_hosts:ro
+
+      # ========================================
+      # Git設定（読み取り専用）
+      # ========================================
+      - ${HOME}/.gitconfig:/home/appuser/.gitconfig:ro
+
+      # ========================================
+      # エージェント設定ファイル（オプション）
+      # ========================================
+
+      # GitHub Copilot CLI設定
+      - ${HOME}/.config/github-copilot:/home/appuser/.config/github-copilot:ro
+
+      # Cursor設定（必要な場合）
+      # - ${HOME}/.cursor:/home/appuser/.cursor:ro
+
+    # 環境変数（.envファイルから読み込み）
+    env_file:
+      - .env
+
+    # または、個別に指定する場合（非推奨：機密情報がファイルに残る）
+    # environment:
+    #   # vibe-kanban設定
+    #   - PORT=3000
+    #   - HOST=0.0.0.0
+    #
+    #   # SSH
+    #   - SSH_AUTH_SOCK=${SSH_AUTH_SOCK}
+    #
+    #   # コーディングエージェント
+    #   - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    #   - GEMINI_API_KEY=${GEMINI_API_KEY}
+    #   - CURSOR_API_KEY=${CURSOR_API_KEY}
+    #   - OPENAI_API_KEY=${OPENAI_API_KEY}
+    #
+    #   # vibe-kanban OAuth（オプション）
+    #   - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+    #   - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+    #   - POSTHOG_API_KEY=${POSTHOG_API_KEY}
+
+    # ホストのUID/GIDを使用してパーミッション問題を回避
+    user: "${UID:-1000}:${GID:-1000}"
+
+    # リソース制限
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+    # セキュリティ設定
+    security_opt:
+      - no-new-privileges:true
+
+    # 開発環境では書き込み可能なファイルシステムを使用
+    # read_only: false
+
+    # 一時ファイル用のtmpfs
+    tmpfs:
+      - /tmp:size=200M,mode=1777
+
+    # ケーパビリティ（最小限）
+    cap_drop:
+      - ALL
+    # 必要に応じて追加
+    # cap_add:
+    #   - NET_BIND_SERVICE
+
+    # PID制限
+    pids_limit: 200
+
+    # ネットワーク設定
+    networks:
+      - vibe-agents-network
+
+    # ヘルスチェック
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    # 再起動ポリシー
+    restart: unless-stopped
+
+    # ログ設定
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  vibe-agents-network:
+    driver: bridge
+
+# ========================================
+# 使用方法
+# ========================================
+
+# 1. .envファイルを作成:
+#    cp .env.agents.example .env
+#
+# 2. .envファイルを編集し、API keyを設定
+#
+# 3. パーミッション設定:
+#    chmod 600 .env
+#
+# 4. UID/GIDを設定:
+#    export UID=$(id -u)
+#    export GID=$(id -g)
+#
+# 5. 起動:
+#    docker-compose -f docker-compose.agents.yml up -d
+#
+# 6. ログ確認:
+#    docker-compose -f docker-compose.agents.yml logs -f
+#
+# 7. 停止:
+#    docker-compose -f docker-compose.agents.yml down
+
+# ========================================
+# デバッグ
+# ========================================
+
+# 環境変数が正しく設定されているか確認:
+#   docker-compose -f docker-compose.agents.yml exec vibe-kanban sh -c 'env | grep API_KEY'
+#
+# コンテナ内でシェルを起動:
+#   docker-compose -f docker-compose.agents.yml exec vibe-kanban sh
