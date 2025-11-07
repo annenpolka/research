@@ -2,11 +2,13 @@
 
 このガイドは、vibe-kanbanを使って実際の開発プロジェクトで作業を始めるための最短ルートです。
 
-## ⚠️ 重要な前提
+## ⚠️ 重要な前提（ソースコード確認済み）
 
-**vibe-kanbanはエージェント管理ツールです。コーディングエージェント本体は含まれません。**
+**vibe-kanbanは`npx`経由でエージェントCLIを自動実行します。**
 
-エージェント（Claude Code、Gemini CLI等）は**ホスト側で**インストール・認証する必要があります。
+- ✅ エージェントのインストールは**不要**
+- ✅ vibe-kanbanが自動的にダウンロード・実行
+- ✅ 認証はAPI keyのみ（環境変数）
 
 詳しくは **[ARCHITECTURE.md](ARCHITECTURE.md)** を参照してください。
 
@@ -15,9 +17,9 @@
 - Docker がインストールされていること
 - Git がインストールされていること
 - プロジェクトディレクトリが存在すること
-- **（オプション）使用したいAIエージェントがホストにインストール・認証されていること**
-  - Claude Code: `npm install -g @anthropic-ai/claude-cli && claude auth login`
-  - Gemini CLI: `npm install -g @google/generative-ai-cli && gemini-cli auth login`
+- **AIエージェントのAPI keyを取得していること**
+  - Claude Code: [Anthropic API key](https://console.anthropic.com/settings/keys)
+  - Gemini CLI: [Google AI API key](https://makersuite.google.com/app/apikey)
   - その他のエージェントについては [CODING_AGENTS.md](CODING_AGENTS.md) を参照
 
 ## 5分で始める

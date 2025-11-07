@@ -44,32 +44,39 @@ vibe-kanbanは、Claude Code、Gemini CLI、Codex、Ampなどの複数のAIコ�
 - `GITHUB_CLIENT_ID`: GitHub OAuth認証（ビルド時）
 - `POSTHOG_API_KEY`: PostHog分析（ビルド時）
 
-### コーディングエージェントの設定
+### コーディングエージェントの設定（ソースコード確認済み）
 
 vibe-kanbanは複数のAIコーディングエージェント（Claude Code、Gemini CLI、Cursor CLI、GitHub Copilot CLI、OpenAI Codex等）を統合管理します。
 
 ⚠️ **重要な理解**:
 
-1. **vibe-kanbanはエージェント本体を含みません**
-   - vibe-kanbanはオーケストレーションツール（管理ツール）
-   - 実際のコード生成はエージェントが実行
+**vibe-kanbanは`npx`経由でエージェントCLIを自動実行します**
 
-2. **エージェントはホスト側で実行**
-   - エージェント（Claude Code等）をホストにインストール
-   - ホスト側で認証を完了
-   - vibe-kanbanコンテナ内にエージェントをインストールする必要は**ありません**
+1. **エージェントのインストールは不要**
+   - vibe-kanbanコンテナ内で`npx`が自動的にエージェントCLIをダウンロード・実行
+   - ユーザーはエージェントを事前にインストールする必要がありません
 
-3. **vibe-kanbanの役割**
-   - Webベースのカンバンボード
-   - タスク管理と可視化
-   - エージェント設定の一元管理
+2. **認証はAPI keyのみ**
+   - 環境変数でAPI keyを渡す
+   - ブラウザ認証（Claude Pro/Max等）は使用できません
+
+3. **実行の流れ**
+   ```
+   vibe-kanban (Rust) → npx実行 → エージェントCLI自動ダウンロード → 実行
+   ```
+
+4. **例**: Claude Codeの場合
+   ```bash
+   # vibe-kanbanが内部で実行
+   npx -y @anthropic-ai/claude-code@2.0.31
+   ```
 
 詳しいアーキテクチャについては、**[ARCHITECTURE.md](ARCHITECTURE.md)** を参照してください。
 
 エージェントの認証方法とAPI keyの管理については、**[CODING_AGENTS.md](CODING_AGENTS.md)** を参照してください。主なトピック：
 
 - サポートされているコーディングエージェント一覧
-- 各エージェントの認証方法（API key、ブラウザ認証等）
+- 各エージェントのAPI key取得方法
 - コンテナ環境での認証情報の安全な管理
 - Docker Secrets / Kubernetes Secrets の使用
 - セキュリティベストプラクティス
@@ -78,20 +85,23 @@ vibe-kanbanは複数のAIコーディングエージェント（Claude Code、Ge
 **クイックスタート**:
 
 ```bash
-# 1. .envファイルを作成
-cp .env.agents.example .env
+# 1. API keyを準備
+export ANTHROPIC_API_KEY=sk-ant-your-key
+export GEMINI_API_KEY=your-gemini-key
 
-# 2. API keyを設定（エディタで編集）
-vi .env
+# 2. コンテナ起動（API key自動設定）
+docker run -d \
+  --name vibe-kanban \
+  -p 3000:3000 \
+  -e ANTHROPIC_API_KEY \
+  -e GEMINI_API_KEY \
+  -v ~/projects/my-app:/repos/my-app:rw \
+  vibe-kanban:latest
 
-# 3. パーミッション設定
-chmod 600 .env
+# 3. ブラウザでアクセス
+# http://localhost:3000
 
-# 4. コンテナ起動
-docker-compose -f docker-compose.agents.yml up -d
-
-# 5. 設定確認
-./check-agents.sh
+# エージェントCLIは自動的にダウンロード・実行されます
 ```
 
 ### ホストからの認証情報の引き継ぎ

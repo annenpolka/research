@@ -1,439 +1,333 @@
-# vibe-kanban アーキテクチャと実行モデル
+# vibe-kanban アーキテクチャ（正確版）
 
-vibe-kanbanのアーキテクチャとコーディングエージェントの実行モデルについて解説します。
+vibe-kanbanの実際のアーキテクチャとコーディングエージェントの実行方法について、ソースコードに基づいて正確に解説します。
 
-## 目次
+## ⚠️ 重要な理解
 
-1. [vibe-kanbanとは](#vibe-kanbanとは)
-2. [アーキテクチャ概要](#アーキテクチャ概要)
-3. [エージェントの実行場所](#エージェントの実行場所)
-4. [コンテナ化における重要な理解](#コンテナ化における重要な理解)
-5. [MCP（Model Context Protocol）](#mcpmodel-context-protocol)
-6. [実装パターン](#実装パターン)
+**vibe-kanbanは`npx`経由でエージェントCLIを自動実行します**
 
----
-
-## vibe-kanbanとは
-
-### 役割
-
-vibe-kanbanは**AIコーディングエージェントのオーケストレーションツール**です。
-
-**vibe-kanban自体はコーディングエージェントではありません。**
-
-主な機能：
-- 📋 **カンバンボード**: タスクの可視化と管理
-- 🔄 **オーケストレーション**: 複数エージェントの並列・直列実行管理
-- ⚙️ **設定管理**: エージェント設定の一元管理
-- 📊 **進捗追跡**: 各エージェントのステータス監視
-- 🔍 **コードレビュー**: 生成されたコードの確認
-
-### vibe-kanbanが**しないこと**
-
-- ❌ コードを直接生成しない
-- ❌ AIモデルを実行しない
-- ❌ エージェントCLIツールを含まない
-
----
+- ✅ vibe-kanbanコンテナ内でエージェントCLIが実行される
+- ✅ npxが自動的にエージェントをダウンロード・実行
+- ✅ ユーザーはエージェントを事前インストールする必要が**ない**
+- ✅ 認証はAPI key（環境変数）で行う
 
 ## アーキテクチャ概要
 
-### 全体構成
+### 実際の構成（ソースコード確認済み）
 
 ```
-┌─────────────────────────────────────────────────┐
-│              ホストマシン                          │
-│                                                 │
-│  ┌──────────────────────────────────────────┐  │
-│  │  AIコーディングエージェント（MCP Client）   │  │
-│  ├──────────────────────────────────────────┤  │
-│  │  • Claude Code (claude-cli)              │  │
-│  │  • Gemini CLI (gemini-cli)               │  │
-│  │  • Cursor CLI (cursor-agent)             │  │
-│  │  • GitHub Copilot CLI (gh copilot)       │  │
-│  │  • OpenAI Codex                          │  │
-│  └──────────────┬───────────────────────────┘  │
-│                 │                               │
-│                 │ MCP / API                     │
-│                 │                               │
-│  ┌──────────────▼───────────────────────────┐  │
-│  │  vibe-kanban (Webアプリ)                  │  │
-│  │  ┌────────────────────────────────────┐  │  │
-│  │  │  • Webベースカンバンボード           │  │  │
-│  │  │  • タスク管理UI                      │  │  │
-│  │  │  • エージェント設定管理               │  │  │
-│  │  │  • 進捗追跡・可視化                  │  │  │
-│  │  └────────────────────────────────────┘  │  │
-│  │  ┌────────────────────────────────────┐  │  │
-│  │  │  バックエンド (Rust)                 │  │  │
-│  │  │  • REST API                         │  │  │
-│  │  │  • タスク管理ロジック                 │  │  │
-│  │  │  • 設定ファイル管理                  │  │  │
-│  │  └────────────────────────────────────┘  │  │
-│  └──────────────────────────────────────────┘  │
-│                                                 │
-│  ┌──────────────────────────────────────────┐  │
-│  │  プロジェクトファイル (/repos)             │  │
-│  │  • ソースコード                           │  │
-│  │  • Git リポジトリ                         │  │
-│  │  • エージェントの作業領域                  │  │
-│  └──────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────┘
-```
-
-### コンポーネント
-
-#### 1. AIコーディングエージェント（ホスト側）
-
-- **インストール場所**: ホストマシン
-- **実行場所**: ホストマシンのプロセス
-- **役割**: 実際のコード生成、AIモデルとの通信
-
-#### 2. vibe-kanban（コンテナまたはホスト）
-
-- **構成**: Webアプリケーション（Rust + TypeScript）
-- **役割**: 管理・オーケストレーション
-- **ポート**: 3000（デフォルト）
-
-#### 3. プロジェクトファイル
-
-- **場所**: ホストマシン（コンテナにマウント）
-- **役割**: エージェントが操作する実際のコード
-
----
-
-## エージェントの実行場所
-
-### ❌ 誤解：コンテナ内でエージェントを実行
-
-```
-┌─────────────────────────────────┐
-│  vibe-kanbanコンテナ             │
-│  ┌───────────────────────────┐  │
-│  │  ❌ claude-cli            │  │  ← 不要！
-│  │  ❌ gemini-cli            │  │
-│  │  ❌ cursor-agent          │  │
-│  │  ✅ vibe-kanban (Webアプリ) │  │
-│  └───────────────────────────┘  │
-└─────────────────────────────────┘
-```
-
-**vibe-kanbanコンテナ内にエージェントをインストールする必要はありません！**
-
-### ✅ 正しい理解：ホスト側でエージェントを実行
-
-```
-┌─────────────────────────────────────────────────┐
-│  ホストマシン                                      │
-│  ┌──────────────────────────────────────────┐  │
-│  │  ✅ claude-cli (認証済み)                  │  │
-│  │  ✅ gemini-cli (認証済み)                  │  │
-│  │  ✅ cursor-agent (認証済み)                │  │
-│  └──────────────────────────────────────────┘  │
-│                     ↕                           │
-│  ┌──────────────────────────────────────────┐  │
-│  │  Docker コンテナ                           │  │
-│  │  ┌────────────────────────────────────┐  │  │
-│  │  │  vibe-kanban (Webアプリのみ)         │  │  │
-│  │  └────────────────────────────────────┘  │  │
-│  └──────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────┘
-```
-
-**エージェントはホスト側で認証・実行し、vibe-kanbanはそれらを管理するだけです。**
-
----
-
-## コンテナ化における重要な理解
-
-### vibe-kanbanコンテナの内容
-
-**含まれるもの**:
-- ✅ vibe-kanban Webアプリケーション（Rust + TypeScript）
-- ✅ Node.js ランタイム
-- ✅ 必要な依存ライブラリ
-
-**含まれないもの**:
-- ❌ Claude Code CLI
-- ❌ Gemini CLI
-- ❌ Cursor CLI
-- ❌ GitHub Copilot CLI
-- ❌ その他のエージェントツール
-
-### なぜコンテナ内にエージェントが不要なのか
-
-#### 理由1: アーキテクチャの設計
-
-vibe-kanbanは**オーケストレーター**であり、**実行環境**ではありません。
-
-- エージェントのCLIツールはホストで実行
-- vibe-kanbanはタスク管理とUI提供のみ
-
-#### 理由2: 認証の複雑さ
-
-各エージェントは固有の認証フローを持ちます：
-
-- Claude Code: ブラウザでログイン、またはAPI key
-- Gemini CLI: Google アカウント認証
-- Cursor CLI: ブラウザでログイン
-- GitHub Copilot: GitHub認証とデバイスフロー
-
-これらをコンテナ内で実行するのは非常に複雑です。
-
-#### 理由3: ホスト側の設定ファイル
-
-エージェントは設定をホスト側のファイルに保存します：
-
-```bash
-~/.claude/config        # Claude Code設定
-~/.config/gemini/       # Gemini CLI設定
-~/.cursor/              # Cursor CLI設定
-~/.config/github-copilot/  # GitHub Copilot設定
-```
-
-vibe-kanbanは**これらの設定を参照・更新**します。
-
-#### 理由4: プロジェクトへのアクセス
-
-エージェントはホスト側のプロジェクトファイルを直接操作します：
-
-```bash
-~/projects/my-app/      # エージェントの作業ディレクトリ
-```
-
-コンテナ内のエージェントからは、これらのファイルにアクセスするのが困難です。
-
----
-
-## MCP（Model Context Protocol）
-
-### MCPとは
-
-**Model Context Protocol**は、AIエージェントとツール間の標準的な通信プロトコルです。
-
-### vibe-kanbanにおけるMCP
-
-vibe-kanbanはMCPを使用してエージェントを統合します：
-
-```
-┌─────────────────────────────────────────────────┐
-│  エージェント（MCPクライアント）                    │
-│  • Claude Code                                  │
-│  • Gemini CLI                                   │
-│  • Cursor CLI                                   │
-└──────────────┬──────────────────────────────────┘
-               │ MCP Protocol
-               │ (標準化されたAPI)
-               ▼
 ┌──────────────────────────────────────────────────┐
-│  vibe-kanban（MCPサーバー / オーケストレーター）    │
-│  • タスク管理                                     │
-│  • 設定管理                                      │
-│  • 進捗追跡                                      │
+│  vibe-kanbanコンテナ                               │
+│                                                  │
+│  ┌────────────────────────────────────────────┐ │
+│  │  vibe-kanban (Rust + TypeScript)           │ │
+│  │  ├─ Web UI (カンバンボード)                  │ │
+│  │  ├─ REST API (Axum)                        │ │
+│  │  └─ Executors (エージェント実行エンジン)      │ │
+│  └────────────┬───────────────────────────────┘ │
+│               │                                  │
+│               │ npx実行                          │
+│               ▼                                  │
+│  ┌────────────────────────────────────────────┐ │
+│  │  npx (Node Package Executor)               │ │
+│  │  - 自動ダウンロード                          │ │
+│  │  - キャッシュ管理                            │ │
+│  └────────────┬───────────────────────────────┘ │
+│               │                                  │
+│               │ダウンロード・実行                 │
+│               ▼                                  │
+│  ┌────────────────────────────────────────────┐ │
+│  │  エージェントCLI（自動ダウンロード）          │ │
+│  │  ├─ @anthropic-ai/claude-code@2.0.31       │ │
+│  │  ├─ @google/gemini-cli@0.8.1               │ │
+│  │  ├─ cursor-agent                           │ │
+│  │  └─ その他のエージェント                     │ │
+│  └────────────────────────────────────────────┘ │
+│                                                  │
+│  環境変数（認証情報）                              │
+│  - ANTHROPIC_API_KEY                            │
+│  - GEMINI_API_KEY                               │
+│  - OPENAI_API_KEY                               │
+│  - CURSOR_API_KEY                               │
+└──────────────────────────────────────────────────┘
+         ↕
+┌──────────────────────────────────────────────────┐
+│  ホストマシン                                       │
+│  - プロジェクトファイル（ボリュームマウント）         │
+│  - Git リポジトリ                                 │
 └──────────────────────────────────────────────────┘
 ```
 
-### MCP設定
+## ソースコードの証拠
 
-vibe-kanbanは各エージェントのMCP設定を管理します：
+### Claude Code実行（crates/executors/src/executors/claude.rs）
 
-```bash
-# Claude Codeの例
-claude mcp add vibe_kanban -s project -- npx -y vibe-kanban --mcp
+```rust
+fn base_command(_profile: &CodingAgentProfile) -> String {
+    "npx -y @anthropic-ai/claude-code@2.0.31".to_string()
+}
 ```
 
-この設定は**エージェントのグローバル設定ファイル**に保存され、vibe-kanbanを停止しても永続化されます。
+- `npx -y`: 自動承認フラグ（インストール確認なし）
+- `@anthropic-ai/claude-code@2.0.31`: npmパッケージ名とバージョン
+- コンテナ内で実行され、自動的にダウンロード
 
----
+### Gemini CLI実行（crates/executors/src/executors/gemini.rs）
 
-## 実装パターン
-
-### パターン1: すべてホスト側で実行（推奨）
-
-**構成**:
-```bash
-# ホストマシン
-├── エージェント（claude-cli、gemini-cli等）
-├── vibe-kanban（npx vibe-kanban）
-└── プロジェクトファイル（~/projects/）
+```rust
+fn base_command(_profile: &CodingAgentProfile) -> String {
+    "npx -y @google/gemini-cli@0.8.1".to_string()
+}
 ```
 
-**メリット**:
-- ✅ 最もシンプル
-- ✅ 認証が容易
-- ✅ ファイルアクセスが直接的
+### その他のエージェント
 
-**デメリット**:
-- ❌ ホスト環境に依存
-- ❌ 隔離性が低い
+同様のパターンで各エージェントが実装されています：
+- **Copilot**: GitHub Copilot CLI
+- **Cursor**: Cursor Agent CLI
+- **OpenCode**: OpenCode CLI
+- **Codex**: OpenAI Codex
+- **Amp**: Amp CLI
 
-**実行方法**:
+## 実行フロー
 
-```bash
-# 1. エージェントをホストにインストール・認証
-npm install -g @anthropic-ai/claude-cli
-claude auth login
+### 1. ユーザーがタスクを作成
 
-# 2. vibe-kanbanを起動
-npx vibe-kanban
+vibe-kanban Web UIでタスクを作成し、エージェントを選択
 
-# 3. ブラウザでアクセス
-# http://localhost:3000
+### 2. vibe-kanbanがコマンド実行
+
+Rustコード（CommandBuilder）がnpxコマンドを構築：
+
+```rust
+CommandBuilder::new()
+    .params(vec!["-p".to_string()])
+    .extend_params(additional_params)
+    .build()
 ```
 
----
+### 3. npxが自動ダウンロード
 
-### パターン2: vibe-kanbanのみコンテナ化（推奨）
-
-**構成**:
 ```bash
-# ホストマシン
-├── エージェント（claude-cli、gemini-cli等）
-├── Docker コンテナ
-│   └── vibe-kanban（Webアプリ）
-└── プロジェクトファイル（~/projects/）
+npx -y @anthropic-ai/claude-code@2.0.31 -p /repos/project --output-format=stream-json
 ```
 
-**メリット**:
-- ✅ vibe-kanbanの隔離
-- ✅ エージェント認証が容易
-- ✅ ファイルアクセスが可能（ボリュームマウント）
-- ✅ エージェントのホスト側管理
+- npxがパッケージをキャッシュから確認
+- なければnpmレジストリからダウンロード
+- ダウンロード後、即座に実行
 
-**デメリット**:
-- ❌ ホストとコンテナ間の通信設定が必要
+### 4. エージェントCLIが実行
 
-**実行方法**:
+- stdin/stdout/stderrがパイプで接続
+- JSON形式でストリーミング通信
+- リアルタイムでログ出力
+
+### 5. 認証
+
+環境変数から認証情報を読み取り：
 
 ```bash
-# 1. ホスト側でエージェントを認証
-claude auth login
-gemini-cli auth login
+ANTHROPIC_API_KEY=sk-ant-xxx npx -y @anthropic-ai/claude-code@2.0.31
+```
 
-# 2. vibe-kanbanをコンテナで起動
+## なぜこの設計なのか
+
+### メリット
+
+1. **ユーザーの手間が不要**
+   - エージェントの事前インストール不要
+   - npxが自動的に管理
+
+2. **バージョン管理が容易**
+   - コードでバージョン指定
+   - 常に正しいバージョンが実行される
+
+3. **環境の一貫性**
+   - コンテナ内で完結
+   - 依存関係の問題が発生しにくい
+
+4. **更新が簡単**
+   - ソースコードのバージョン番号を変更するだけ
+   - ユーザー側の作業不要
+
+### デメリット
+
+1. **初回実行が遅い**
+   - npxがパッケージをダウンロード
+   - キャッシュ後は高速
+
+2. **ブラウザ認証が使えない**
+   - API keyのみで認証
+   - Claude Pro/Maxサブスクリプションは利用不可
+
+3. **ネットワーク依存**
+   - npmレジストリへのアクセスが必要
+   - オフライン環境では使用困難
+
+## 認証方法
+
+### API keyを使用（推奨）
+
+各エージェントのAPI keyを環境変数で渡します：
+
+```bash
 docker run -d \
   --name vibe-kanban \
   -p 3000:3000 \
+  -e ANTHROPIC_API_KEY=sk-ant-your-key \
+  -e GEMINI_API_KEY=your-gemini-key \
+  -e OPENAI_API_KEY=sk-your-openai-key \
   -v ~/projects:/repos:rw \
-  -v ~/.claude:/home/appuser/.claude:ro \
-  -v ~/.config/gemini:/home/appuser/.config/gemini:ro \
-  -e ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY} \
   vibe-kanban:latest
-
-# 3. ブラウザでアクセス
-# http://localhost:3000
 ```
 
-**重要なポイント**:
+### Claude Codeの場合
 
-エージェントの設定ディレクトリをコンテナにマウントすることで、vibe-kanbanがホスト側のエージェント設定を参照できます：
-
+**Option 1: API key（推奨）**
 ```bash
--v ~/.claude:/home/appuser/.claude:ro                 # Claude Code設定
--v ~/.config/gemini:/home/appuser/.config/gemini:ro   # Gemini CLI設定
--v ~/.cursor:/home/appuser/.cursor:ro                 # Cursor CLI設定
--v ~/.config/github-copilot:/home/appuser/.config/github-copilot:ro  # Copilot設定
+-e ANTHROPIC_API_KEY=sk-ant-xxx
 ```
 
----
+**Option 2: Claude Pro/Maxサブスクリプション**
+- ❌ コンテナ環境では使用不可
+- ブラウザ認証が必要なため
 
-### パターン3: リモートサーバー構成
+### Gemini CLIの場合
 
-**構成**:
 ```bash
-# ローカルマシン
-├── エージェント（claude-cli、gemini-cli等）
-└── ブラウザ（vibe-kanban UIにアクセス）
-         │
-         │ HTTP/SSH
-         ▼
-# リモートサーバー（Docker）
-├── vibe-kanbanコンテナ（Webアプリ）
-└── プロジェクトファイル
+-e GEMINI_API_KEY=your-gemini-key
 ```
 
-**メリット**:
-- ✅ リモート開発環境
-- ✅ チーム共有可能
-- ✅ 強力なサーバーリソース活用
+Google AIのAPI keyを使用
 
-**デメリット**:
-- ❌ ネットワーク設定が複雑
-- ❌ エージェントの実行場所が分散
-
-**実行方法**:
+### GitHub Copilot
 
 ```bash
-# リモートサーバーでvibe-kanbanを起動
+-e GITHUB_TOKEN=ghp_xxx
+```
+
+GitHubパーソナルアクセストークン
+
+## 必要な環境
+
+### vibe-kanbanコンテナ内
+
+既にDockerfileに含まれています：
+
+- ✅ Node.js 24
+- ✅ npm/npx
+- ✅ Rust runtime
+- ✅ 必要な依存ライブラリ
+
+### ホスト側
+
+必要なのはプロジェクトファイルのみ：
+
+```bash
 docker run -d \
-  --name vibe-kanban \
-  -p 3000:3000 \
+  -v ~/projects/my-app:/repos/my-app:rw \
   vibe-kanban:latest
-
-# ローカルマシンでエージェントを実行
-# vibe-kanbanのUIはリモートサーバーにアクセス
-# http://remote-server:3000
 ```
 
----
+## トラブルシューティング
+
+### エージェントが実行されない
+
+**症状**:
+```
+Error: Command not found: npx
+```
+
+**原因**: Dockerfileが正しくビルドされていない
+
+**解決**:
+```bash
+docker build -t vibe-kanban:latest .
+```
+
+### API key not found
+
+**症状**:
+```
+Error: ANTHROPIC_API_KEY environment variable not found
+```
+
+**解決**:
+```bash
+docker run -e ANTHROPIC_API_KEY=sk-ant-your-key vibe-kanban:latest
+```
+
+### npx download fails
+
+**症状**:
+```
+Error: Failed to download @anthropic-ai/claude-code
+```
+
+**原因**: ネットワーク接続またはnpmレジストリの問題
+
+**解決**:
+```bash
+# コンテナ内で手動確認
+docker exec -it vibe-kanban npx -y @anthropic-ai/claude-code@2.0.31 --version
+```
+
+### Permission denied on /repos
+
+**症状**:
+```
+Error: Permission denied: /repos/my-project
+```
+
+**解決**:
+```bash
+docker run --user $(id -u):$(id -g) \
+  -v ~/projects:/repos:rw \
+  vibe-kanban:latest
+```
 
 ## まとめ
 
 ### 重要なポイント
 
-1. **vibe-kanbanは管理ツール**
-   - コーディングエージェントではない
-   - タスク管理とオーケストレーションのみ
+1. **vibe-kanbanがnpx経由でエージェントを実行**
+   - コンテナ内で完結
+   - 自動ダウンロード・実行
 
-2. **エージェントはホスト側で実行**
-   - コンテナ内にインストール不要
-   - ホストで認証・実行
+2. **ユーザーはエージェントをインストール不要**
+   - npxが自動管理
+   - バージョンもコードで管理
 
-3. **コンテナ化するのはvibe-kanbanのみ**
-   - Webアプリケーションとして隔離
-   - エージェント設定はボリュームマウント
+3. **認証はAPI keyのみ**
+   - 環境変数で渡す
+   - ブラウザ認証は不可
 
-4. **API keyは環境変数で渡す**
-   - コンテナ内でエージェントを実行しないため
-   - エージェントがAPI直接呼び出す場合の設定
-
-### 推奨構成
-
-**開発環境**:
-- エージェント: ホストにインストール・認証
-- vibe-kanban: `npx vibe-kanban`（ホスト実行）
-
-**本番環境**:
-- エージェント: ホストにインストール・認証
-- vibe-kanban: Dockerコンテナ
-- プロジェクト: ボリュームマウント
-- エージェント設定: 読み取り専用マウント
+4. **ホスト側に必要なのはプロジェクトファイルのみ**
+   - ボリュームマウント
+   - エージェント自体は不要
 
 ### クイックスタート
 
 ```bash
-# 1. ホスト側でエージェントをインストール・認証
-npm install -g @anthropic-ai/claude-cli
-claude auth login
+# 1. API keyを準備
+export ANTHROPIC_API_KEY=sk-ant-your-key
+export GEMINI_API_KEY=your-gemini-key
 
-# 2. vibe-kanbanを起動（ホストまたはコンテナ）
-# ホスト実行の場合:
-npx vibe-kanban
-
-# コンテナ実行の場合:
+# 2. vibe-kanbanを起動
 docker run -d \
   --name vibe-kanban \
   -p 3000:3000 \
-  -v ~/projects:/repos:rw \
-  -v ~/.claude:/home/appuser/.claude:ro \
+  -e ANTHROPIC_API_KEY \
+  -e GEMINI_API_KEY \
+  -v ~/projects/my-app:/repos/my-app:rw \
+  --user $(id -u):$(id -g) \
   vibe-kanban:latest
 
 # 3. ブラウザでアクセス
 # http://localhost:3000
 
-# 4. vibe-kanbanのUIからエージェントにタスクを割り当て
+# 4. タスクを作成してエージェントを選択
+# エージェントCLIは自動的にダウンロード・実行される
 ```
 
----
-
-**これで、vibe-kanbanのアーキテクチャと正しい実装方法が理解できました！** 🎯
+これで正しいアーキテクチャの理解ができました！ 🎯
