@@ -4,14 +4,17 @@
 
 ## 🚀 超速セットアップ（対話式）
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/annenpolka/research/main/vibe-kanban-container-setup/quick-setup.sh | bash
-```
-
-または、ローカルにダウンロードして実行：
+quick-setup.shは対話的な入力が必要なため、以下の手順で実行してください：
 
 ```bash
-bash quick-setup.sh
+# スクリプトをダウンロード
+curl -fsSL https://raw.githubusercontent.com/annenpolka/research/main/vibe-kanban-container-setup/quick-setup.sh -o quick-setup.sh
+
+# 実行権限を付与
+chmod +x quick-setup.sh
+
+# スクリプトを実行
+./quick-setup.sh
 ```
 
 ## ⚡ 完全ワンライナー
