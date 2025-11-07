@@ -10,7 +10,7 @@
 
 ## 調査対象
 
-- リポジトリ: https://github.com/steveyegge/beads
+- リポジトリ: <https://github.com/steveyegge/beads>
 - 言語: Go
 - 主要コンポーネント:
   - `cmd/bd/init.go` - 初期化処理
@@ -52,13 +52,16 @@
 
 2. **`.gitattributes`の変更**
    - カスタムマージドライバーを設定するため、`.gitattributes`に以下を追加:
+
      ```
      .beads/beads.jsonl merge=beads
      ```
+
    - リポジトリ全体のgit設定に影響
 
 3. **git configの変更**
    - ローカルまたはグローバルgit設定にマージドライバーを追加:
+
      ```
      git config merge.beads.driver "bd merge %A %O %L %R"
      git config merge.beads.name "bd JSONL merge driver"
@@ -81,19 +84,23 @@
 READMEとAGENTS.mdによると、以下の手順が推奨されています:
 
 1. **人間の開発者が実行**
+
    ```bash
    bd init
    ```
 
 2. **AGENTS.mdに以下を追加**（手動）
+
    ```
    BEFORE ANYTHING ELSE: run 'bd onboard' and follow the instructions
    ```
 
 3. **エージェントが実行**
+
    ```bash
    bd onboard
    ```
+
    - 統合ガイドを受け取る
    - ワークフロー文書が自動生成される
 
@@ -179,17 +186,20 @@ git status | grep -q ".beads" && echo "WARNING: .beads/ is tracked!" || echo "OK
 **タスク管理のベストプラクティス:**
 
 1. **セッション開始時**
+
    ```bash
    bd ready --json  # 準備完了のタスクを確認
    ```
 
 2. **作業中**
+
    ```bash
    bd create "実装: 機能X" -p 1 --deps discovered-from:bd-Y --json
    bd update bd-Z --status in_progress --json
    ```
 
 3. **タスク完了時**
+
    ```bash
    bd close bd-Z --reason "実装完了、テスト済み" --json
    ```
@@ -235,6 +245,7 @@ echo ".beads/" >> .git/info/exclude
 基本コマンド: `bd create "タスク" --json` / `bd ready --json` / `bd list --json`
 
 注意: `.beads/`は`.git/info/exclude`により除外され、コミット対象外です。
+
 ```
 
 ### 推奨
@@ -284,18 +295,21 @@ bd ready --json
 ```
 
 **Create new issues:**
+
 ```bash
 bd create "Issue title" -t bug|feature|task -p 0-4 --json
 bd create "Issue title" -p 1 --deps discovered-from:bd-123 --json
 ```
 
 **Claim and update:**
+
 ```bash
 bd update bd-42 --status in_progress --json
 bd update bd-42 --priority 1 --json
 ```
 
 **Complete work:**
+
 ```bash
 bd close bd-42 --reason "Completed" --json
 ```
@@ -329,6 +343,7 @@ bd close bd-42 --reason "Completed" --json
 ### Auto-Sync
 
 bd automatically syncs with git:
+
 - Exports to `.beads/issues.jsonl` after changes (5s debounce)
 - Imports from JSONL when newer (e.g., after `git pull`)
 - No manual export/import needed!
@@ -342,6 +357,7 @@ pip install beads-mcp
 ```
 
 Add to MCP config (e.g., `~/.config/claude/config.json`):
+
 ```json
 {
   "beads": {
@@ -356,6 +372,7 @@ Then use `mcp__beads__*` functions instead of CLI commands.
 ### Managing AI-Generated Planning Documents
 
 AI assistants often create planning and design documents during development:
+
 - PLAN.md, IMPLEMENTATION.md, ARCHITECTURE.md
 - DESIGN.md, CODEBASE_SUMMARY.md, INTEGRATION_PLAN.md
 - TESTING_GUIDE.md, TECHNICAL_DESIGN.md, and similar files
@@ -363,18 +380,21 @@ AI assistants often create planning and design documents during development:
 **Best Practice: Use a dedicated directory for these ephemeral files**
 
 **Recommended approach:**
+
 - Create a `history/` directory in the project root
 - Store ALL AI-generated planning/design docs in `history/`
 - Keep the repository root clean and focused on permanent project files
 - Only access `history/` when explicitly asked to review past planning
 
 **Example .gitignore entry (optional):**
+
 ```
 # AI planning documents (ephemeral)
 history/
 ```
 
 **Benefits:**
+
 - ✅ Clean repository root
 - ✅ Clear separation between ephemeral and permanent documentation
 - ✅ Easy to exclude from version control if desired
@@ -394,6 +414,7 @@ history/
 - ❌ Do NOT clutter repo root with planning documents
 
 For more details, see README.md and QUICKSTART.md.
+
 ```
 
 </details>
@@ -408,9 +429,11 @@ For more details, see README.md and QUICKSTART.md.
    ```markdown
    6. **Commit together**: Always commit the `.beads/issues.jsonl` file together with the code changes so issue state stays in sync with code state
    ```
+
    → **削除**: `.beads/`はgitignoreされているため不要
 
 2. **"Auto-Sync"セクション全体**
+
    ```markdown
    ### Auto-Sync
 
@@ -419,12 +442,15 @@ For more details, see README.md and QUICKSTART.md.
    - Imports from JSONL when newer (e.g., after `git pull`)
    - No manual export/import needed!
    ```
+
    → **削除または注記追加**: 「このプロジェクトではローカルのみで使用しており、git同期は行いません」
 
 3. **"Why bd?"の"Git-friendly"**
+
    ```markdown
    - Git-friendly: Auto-syncs to JSONL for version control
    ```
+
    → **調整**: 「ローカルで動作し、gitには影響しません」
 
 ### 完全ローカル運用向けの簡略版
@@ -467,18 +493,21 @@ bd ready --json
 ```
 
 **Create new issues:**
+
 ```bash
 bd create "Issue title" -t bug|feature|task -p 0-4 --json
 bd create "Issue title" -p 1 --deps discovered-from:bd-123 --json
 ```
 
 **Claim and update:**
+
 ```bash
 bd update bd-42 --status in_progress --json
 bd update bd-42 --priority 1 --json
 ```
 
 **Complete work:**
+
 ```bash
 bd close bd-42 --reason "Completed" --json
 ```
@@ -511,6 +540,7 @@ bd close bd-42 --reason "Completed" --json
 ### Local-Only Operation
 
 beadsは完全にローカルで動作します：
+
 - `.beads/`ディレクトリはgitignoreされています
 - コミット時に`.beads/issues.jsonl`を含める必要はありません
 - git操作は通常通り行えます（beadsは影響しません）
@@ -540,6 +570,7 @@ pip install beads-mcp
 ```
 
 Add to MCP config (e.g., `~/.config/claude/config.json`):
+
 ```json
 {
   "beads": {
@@ -554,6 +585,7 @@ Then use `mcp__beads__*` functions instead of CLI commands.
 ### Managing AI-Generated Planning Documents
 
 AI assistants often create planning and design documents during development:
+
 - PLAN.md, IMPLEMENTATION.md, ARCHITECTURE.md
 - DESIGN.md, CODEBASE_SUMMARY.md, INTEGRATION_PLAN.md
 - TESTING_GUIDE.md, TECHNICAL_DESIGN.md, and similar files
@@ -561,18 +593,21 @@ AI assistants often create planning and design documents during development:
 **Best Practice: Use a dedicated directory for these ephemeral files**
 
 **Recommended approach:**
+
 - Create a `history/` directory in the project root
 - Store ALL AI-generated planning/design docs in `history/`
 - Keep the repository root clean and focused on permanent project files
 - Only access `history/` when explicitly asked to review past planning
 
 **Example .gitignore entry (optional):**
+
 ```
 # AI planning documents (ephemeral)
 history/
 ```
 
 **Benefits:**
+
 - ✅ Clean repository root
 - ✅ Clear separation between ephemeral and permanent documentation
 - ✅ Easy to exclude from version control if desired
@@ -612,6 +647,7 @@ git commit -m "Ensure .beads/ is ignored"
 ```
 
 For more details about beads functionality, see the official README.md and QUICKSTART.md.
+
 ```
 
 </details>
@@ -652,6 +688,7 @@ For more details about beads functionality, see the official README.md and QUICK
 ### 保持した内容
 
 以下のセクションはオリジナルから**変更なし**で保持：
+
 - ✅ Issue Types
 - ✅ Priorities
 - ✅ MCP Server設定
@@ -803,34 +840,43 @@ bd import -i .beads/issues.jsonl || true
 ### 推奨されるエージェントワークフロー
 
 1. **初期化**（`--quiet`モード）
+
    ```bash
    bd init --quiet
    ```
+
    - 対話なしで自動セットアップ
    - gitフックとマージドライバーを自動インストール
 
 2. **作業の確認**
+
    ```bash
    bd ready --json
    ```
+
    - ブロッカーのない「準備完了」の作業を取得
 
 3. **イシューの作成**
+
    ```bash
    bd create "Issue title" -t bug -p 1 --deps discovered-from:bd-100 --json
    ```
+
    - 依存関係を設定してコンテキストを維持
 
 4. **作業の更新**
+
    ```bash
    bd update bd-42 --status in_progress --json
    bd close bd-42 --reason "Completed" --json
    ```
 
 5. **セッション終了**
+
    ```bash
    bd sync
    ```
+
    - 即座にJSONLにエクスポート、コミット、プル、インポート、プッシュ
    - 30秒のデバウンスを待たずに強制フラッシュ
 
@@ -843,6 +889,7 @@ pip install beads-mcp
 ```
 
 **利点**:
+
 - ネイティブな関数呼び出し（`mcp__beads__create()`等）
 - シェルコマンドの代わりにプログラマティックなAPI
 - 自動ワークスペース検出
@@ -972,26 +1019,31 @@ beadsは本来git同期を前提とした設計ですが、以下の方法で**�
 **手順:**
 
 1. **beadsを初期化**
+
    ```bash
    bd init --skip-merge-driver
    ```
 
 2. **`.git/info/exclude`に追加**
+
    ```bash
    echo ".beads/" >> .git/info/exclude
    ```
 
 3. **`.gitattributes`を削除**（作成されている場合）
+
    ```bash
    rm .gitattributes
    ```
 
 4. **動作確認**
+
    ```bash
    git status  # .beads/が表示されないことを確認
    ```
 
 **メリット:**
+
 - ✅ `.beads/`配下のすべてのファイルがgitから除外される
 - ✅ **コミット対象が一切増えない**（`.gitignore`も不要）
 - ✅ **リポジトリのファイル構造に一切変更なし**
@@ -1000,12 +1052,14 @@ beadsは本来git同期を前提とした設計ですが、以下の方法で**�
 - ✅ `.gitignore`をコミットする必要がない
 
 **デメリット:**
+
 - ❌ 複数マシン間でbeadsデータを同期できない
 - ❌ チームメンバーとイシューを共有できない
 - ❌ マシンを変更するとデータが失われる
 - ⚠️ `.git/info/exclude`は各マシンで個別に設定が必要
 
 **注意:**
+
 - `.git/info/exclude`は、`.gitignore`と同じ構文を使用しますが、リポジトリにコミットされません
 - ローカルマシンのみで有効です
 - 他のマシンやクローンには引き継がれません
@@ -1017,32 +1071,38 @@ beadsは本来git同期を前提とした設計ですが、以下の方法で**�
 **手順:**
 
 1. **beadsを初期化**
+
    ```bash
    bd init --skip-merge-driver
    ```
 
 2. **プロジェクトのルート`.gitignore`に追加**
+
    ```bash
    echo ".beads/" >> .gitignore
    ```
 
 3. **`.gitattributes`を削除**（作成されている場合）
+
    ```bash
    git rm .gitattributes  # または手動で.beadsエントリを削除
    ```
 
 4. **`.gitignore`をコミット**
+
    ```bash
    git add .gitignore
    git commit -m "Add .beads/ to gitignore for local-only beads usage"
    ```
 
 5. **動作確認**
+
    ```bash
    git status  # .beads/が表示されないことを確認
    ```
 
 **メリット:**
+
 - ✅ `.beads/`配下のすべてのファイルがgitから除外される
 - ✅ コミット対象が増えない（`.gitignore`自体は1回のみ）
 - ✅ gitフックが存在していても、`git add .beads/issues.jsonl`が失敗するだけで、コミット自体は成功する（ソフトフェイル設計）
@@ -1050,6 +1110,7 @@ beadsは本来git同期を前提とした設計ですが、以下の方法で**�
 - ✅ 設定が他のマシンやクローンにも引き継がれる
 
 **デメリット:**
+
 - ❌ 複数マシン間でbeadsデータを同期できない
 - ❌ チームメンバーとイシューを共有できない
 - ❌ マシンを変更するとデータが失われる
@@ -1062,6 +1123,7 @@ gitフックは残したまま、自動同期だけを無効化する方法で�
 **手順:**
 
 1. **すべてのコマンドで`--no-auto-flush`フラグを使用**
+
    ```bash
    bd --no-auto-flush create "Issue title"
    bd --no-auto-flush update bd-1 --status in_progress
@@ -1069,21 +1131,25 @@ gitフックは残したまま、自動同期だけを無効化する方法で�
    ```
 
 2. **デーモンを停止**（自動同期を行わない）
+
    ```bash
    bd daemon --stop
    ```
 
 3. **手動同期が必要な場合のみ実行**
+
    ```bash
    bd sync --flush-only  # JSONLにエクスポートのみ（git操作なし）
    ```
 
 **メリット:**
+
 - ✅ 必要に応じて手動で同期できる
 - ✅ 通常はローカルのみで動作
 - ✅ 柔軟性が高い
 
 **デメリット:**
+
 - ❌ すべてのコマンドでフラグを指定する必要がある
 - ❌ デーモン再起動時に注意が必要
 
@@ -1094,28 +1160,33 @@ gitフックは残したまま、自動同期だけを無効化する方法で�
 **手順:**
 
 1. **beadsを初期化**
+
    ```bash
    bd init --skip-merge-driver
    ```
 
 2. **gitフックを削除**
+
    ```bash
    rm .git/hooks/pre-commit
    rm .git/hooks/post-merge
    ```
 
 3. **バックアップされた既存フックを復元**（存在する場合）
+
    ```bash
    [ -f .git/hooks/pre-commit.backup ] && mv .git/hooks/pre-commit.backup .git/hooks/pre-commit
    [ -f .git/hooks/post-merge.backup ] && mv .git/hooks/post-merge.backup .git/hooks/post-merge
    ```
 
 **メリット:**
+
 - ✅ gitワークフローへの影響が完全に排除される
 - ✅ 既存のフックが復元される
 - ✅ 通常のコマンドをそのまま使用可能（フラグ不要）
 
 **デメリット:**
+
 - ❌ 自動エクスポート/インポートが行われない
 - ❌ 手動で`bd sync`を実行する必要がある
 
@@ -1124,6 +1195,7 @@ gitフックは残したまま、自動同期だけを無効化する方法で�
 **最も推奨される方法は「方法1A」です。**
 
 理由:
+
 1. **完全非侵襲**: リポジトリのファイル構造に一切変更を加えない
 2. **シンプル**: 1行追加するだけ（`.git/info/exclude`へ）
 3. **効果的**: コミット対象が一切増えない（`.gitignore`も不要）
@@ -1131,6 +1203,7 @@ gitフックは残したまま、自動同期だけを無効化する方法で�
 5. **可逆的**: `.git/info/exclude`から削除すればいつでも同期モードに戻せる
 
 **方法1Bとの使い分け:**
+
 - **単一マシン専用**: 方法1A（`.git/info/exclude`）
 - **複数マシンで同じ設定**: 方法1B（`.gitignore`）
 - **チームで設定共有**: 方法1B（`.gitignore`）
@@ -1140,16 +1213,20 @@ gitフックは残したまま、自動同期だけを無効化する方法で�
 beadsのgitフックは、以下のようにソフトフェイル設計になっています：
 
 **Pre-commitフック:**
+
 ```bash
 git add .beads/issues.jsonl 2>/dev/null || true
 ```
+
 - `.beads/issues.jsonl`が存在しない、または追加できない場合でも、コミットは成功する
 - エラー出力は抑制される（`2>/dev/null`）
 
 **Post-mergeフック:**
+
 ```bash
 bd import -i .beads/issues.jsonl || true
 ```
+
 - インポート失敗時も警告のみで、マージは失敗しない
 - コード内コメント: "don't fail the merge, just warn"
 
@@ -1204,6 +1281,7 @@ git push
 ```
 
 **注意点:**
+
 - `.beads/`内のデータは完全にローカルのみ
 - マシンを変更する際は、`.beads/`ディレクトリを手動でコピーする必要がある
 - バックアップ戦略を別途検討すること
