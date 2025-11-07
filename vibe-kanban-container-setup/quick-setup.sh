@@ -37,7 +37,9 @@ else
 fi
 
 # プロジェクトディレクトリを聞く（/dev/ttyから直接読み込み）
-read -p "📁 プロジェクトディレクトリのパスを入力 (例: ~/projects/my-app): " PROJECT_DIR < /dev/tty
+DEFAULT_PROJECT_DIR=$(pwd)
+read -p "📁 プロジェクトディレクトリのパスを入力 [デフォルト: $DEFAULT_PROJECT_DIR]: " PROJECT_DIR < /dev/tty
+PROJECT_DIR=${PROJECT_DIR:-$DEFAULT_PROJECT_DIR}
 
 # チルダを展開
 PROJECT_DIR=$(echo "$PROJECT_DIR" | sed "s|^~|$HOME|")
@@ -51,7 +53,8 @@ echo ""
 echo "🔐 認証方法を選択してください:"
 echo "1) OAuth Token方式（推奨・長期運用向け）"
 echo "2) 設定ファイルマウント方式（簡単・短期テスト用、6時間で期限切れ）"
-read -p "選択 (1/2): " AUTH_METHOD < /dev/tty
+read -p "選択 (1/2) [デフォルト: 2]: " AUTH_METHOD < /dev/tty
+AUTH_METHOD=${AUTH_METHOD:-2}
 
 if [ "$AUTH_METHOD" = "1" ]; then
     echo ""
@@ -59,7 +62,8 @@ if [ "$AUTH_METHOD" = "1" ]; then
     echo "1. 以下のコマンドを実行してトークンを生成してください:"
     echo "   npx @anthropic-ai/claude-code setup-token"
     echo ""
-    read -p "トークンを生成しましたか？ (y/n): " CONFIRM < /dev/tty
+    read -p "トークンを生成しましたか？ (y/n) [デフォルト: y]: " CONFIRM < /dev/tty
+    CONFIRM=${CONFIRM:-y}
 
     if [ "$CONFIRM" != "y" ]; then
         echo "❌ セットアップを中止します"
@@ -68,15 +72,20 @@ if [ "$AUTH_METHOD" = "1" ]; then
 
     read -p "🔑 CLAUDE_CODE_OAUTH_TOKEN を入力: " CLAUDE_TOKEN < /dev/tty
 
+    if [ -z "$CLAUDE_TOKEN" ]; then
+        echo "⚠️  警告: トークンが空です。環境変数が設定されている場合は続行します。"
+    fi
+
     echo ""
-    read -p "🔑 GEMINI_API_KEY を入力（Enterでスキップ）: " GEMINI_KEY < /dev/tty
+    read -p "🔑 GEMINI_API_KEY を入力 [Enterでスキップ]: " GEMINI_KEY < /dev/tty
 
     echo ""
     echo "📝 OpenAI Codex認証方法を選択:"
     echo "1) ChatGPTアカウントログイン（事前に 'codex login' 実行済み）"
     echo "2) API key"
     echo "3) スキップ"
-    read -p "選択 (1/2/3): " CODEX_METHOD < /dev/tty
+    read -p "選択 (1/2/3) [デフォルト: 3]: " CODEX_METHOD < /dev/tty
+    CODEX_METHOD=${CODEX_METHOD:-3}
 
     OPENAI_KEY=""
     CODEX_MOUNT=""
@@ -90,7 +99,7 @@ if [ "$AUTH_METHOD" = "1" ]; then
             exit 1
         fi
     elif [ "$CODEX_METHOD" = "2" ]; then
-        read -p "🔑 OPENAI_API_KEY を入力: " OPENAI_KEY < /dev/tty
+        read -p "🔑 OPENAI_API_KEY を入力 [Enterでスキップ]: " OPENAI_KEY < /dev/tty
     fi
 
     # Docker実行
@@ -114,7 +123,8 @@ elif [ "$AUTH_METHOD" = "2" ]; then
     echo "1. 以下のコマンドでClaude Codeで認証してください:"
     echo "   npx @anthropic-ai/claude-code"
     echo ""
-    read -p "認証を完了しましたか？ (y/n): " CONFIRM < /dev/tty
+    read -p "認証を完了しましたか？ (y/n) [デフォルト: y]: " CONFIRM < /dev/tty
+    CONFIRM=${CONFIRM:-y}
 
     if [ "$CONFIRM" != "y" ]; then
         echo "❌ セットアップを中止します"
@@ -127,14 +137,15 @@ elif [ "$AUTH_METHOD" = "2" ]; then
     fi
 
     echo ""
-    read -p "🔑 GEMINI_API_KEY を入力（Enterでスキップ）: " GEMINI_KEY < /dev/tty
+    read -p "🔑 GEMINI_API_KEY を入力 [Enterでスキップ]: " GEMINI_KEY < /dev/tty
 
     echo ""
     echo "📝 OpenAI Codex認証方法を選択:"
     echo "1) ChatGPTアカウントログイン（事前に 'codex login' 実行済み）"
     echo "2) API key"
     echo "3) スキップ"
-    read -p "選択 (1/2/3): " CODEX_METHOD < /dev/tty
+    read -p "選択 (1/2/3) [デフォルト: 3]: " CODEX_METHOD < /dev/tty
+    CODEX_METHOD=${CODEX_METHOD:-3}
 
     OPENAI_KEY=""
     CODEX_MOUNT=""
@@ -148,7 +159,7 @@ elif [ "$AUTH_METHOD" = "2" ]; then
             exit 1
         fi
     elif [ "$CODEX_METHOD" = "2" ]; then
-        read -p "🔑 OPENAI_API_KEY を入力: " OPENAI_KEY < /dev/tty
+        read -p "🔑 OPENAI_API_KEY を入力 [Enterでスキップ]: " OPENAI_KEY < /dev/tty
     fi
 
     # Docker実行
