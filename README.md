@@ -6,7 +6,7 @@ AIツール（主にClaude Code）によって実施された研究プロジェ�
 
 ## プロジェクト一覧
 
-<!-- [[cog
+<!-- [[[cog
 import os
 import re
 from pathlib import Path
@@ -52,8 +52,9 @@ if projects:
         print(f"- **[{project['name']}](./{project['name']})**: {project['summary']}")
 else:
     print("*プロジェクトはまだありません*")
-]] -->
-*プロジェクトはまだありません*
+]]] -->
+- **[beads-non-invasive-analysis](./beads-non-invasive-analysis)**: Beadsは相対的に非侵襲的だが、gitフックとマージドライバーの強制インストールにより一定の侵襲性を持つ。ただし、.beads/を.gitignoreに追加することで、元のリポジトリにコミット対象を一切増やさずに完全ローカル運用が可能。AGENTS.mdは自動変更されない。
+- **[claude-auto-approve-commands](./claude-auto-approve-commands)**: Claude Codeで特定のコマンドを自動許可する設定方法の調査と実装（allowedTools、defaultMode、PreToolUseフック）
 <!-- [[[end]]] -->
 
 ## 使い方
