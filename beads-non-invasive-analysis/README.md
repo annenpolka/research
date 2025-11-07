@@ -215,7 +215,6 @@ echo ".beads/" >> .gitignore
 git add .gitignore
 git commit -m "Ensure .beads/ is ignored"
 ```
-```
 
 #### パターン3: 最小版
 
