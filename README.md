@@ -1,3 +1,4 @@
+Inspired by [Code research projects with async coding agents like Claude Code and Codex](https://simonwillison.net/2025/Nov/6/async-code-research/)
 # Research
 
 AIツール（主にClaude Code）によって実施された研究プロジェクトのコレクション。
