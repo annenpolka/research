@@ -7,9 +7,28 @@ set -e
 echo "🚀 vibe-kanban Quick Setup"
 echo ""
 
+# 標準入力がターミナルかチェック
+if [ ! -t 0 ]; then
+    echo "❌ エラー: このスクリプトは対話的な入力が必要です"
+    echo ""
+    echo "📋 正しい使い方:"
+    echo "1. スクリプトをダウンロード:"
+    echo "   curl -fsSL https://raw.githubusercontent.com/annenpolka/research/main/vibe-kanban-container-setup/quick-setup.sh -o quick-setup.sh"
+    echo ""
+    echo "2. 実行権限を付与:"
+    echo "   chmod +x quick-setup.sh"
+    echo ""
+    echo "3. スクリプトを実行:"
+    echo "   ./quick-setup.sh"
+    echo ""
+    exit 1
+fi
+
 # プロジェクトディレクトリを聞く
 read -p "📁 プロジェクトディレクトリのパスを入力 (例: ~/projects/my-app): " PROJECT_DIR
-PROJECT_DIR="${PROJECT_DIR/#\~/$HOME}"
+
+# チルダを展開
+PROJECT_DIR=$(echo "$PROJECT_DIR" | sed "s|^~|$HOME|")
 
 if [ ! -d "$PROJECT_DIR" ]; then
     echo "❌ エラー: ディレクトリが存在しません: $PROJECT_DIR"
