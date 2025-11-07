@@ -1,0 +1,80 @@
+# Research
+
+AIツール（主にClaude Code）によって実施された研究プロジェクトのコレクション。
+
+このリポジトリは、AIエージェントが独立して実験的なコード研究を実行するための環境です。各プロジェクトはサブディレクトリに格納され、それぞれが特定の研究質問や技術的探索に取り組んでいます。
+
+## プロジェクト一覧
+
+<!-- [[cog
+import os
+import re
+from pathlib import Path
+
+def get_projects():
+    projects = []
+    for item in sorted(Path('.').iterdir()):
+        if item.is_dir() and not item.name.startswith('.') and not item.name.startswith('_'):
+            summary_file = item / '_summary.md'
+            if summary_file.exists():
+                summary = summary_file.read_text().strip()
+            else:
+                # プロジェクトディレクトリのREADME.mdから最初の段落を取得
+                readme_file = item / 'README.md'
+                if readme_file.exists():
+                    content = readme_file.read_text()
+                    # 最初の見出しの後の最初の段落を取得
+                    lines = content.split('\n')
+                    summary_lines = []
+                    started = False
+                    for line in lines:
+                        if line.startswith('#'):
+                            started = True
+                            continue
+                        if started and line.strip():
+                            summary_lines.append(line.strip())
+                            if len(summary_lines) >= 2:
+                                break
+                    summary = ' '.join(summary_lines) if summary_lines else 'プロジェクトの説明'
+                else:
+                    summary = 'プロジェクトの説明'
+
+            projects.append({
+                'name': item.name,
+                'summary': summary
+            })
+
+    return projects
+
+projects = get_projects()
+if projects:
+    for project in projects:
+        print(f"- **[{project['name']}](./{project['name']})**: {project['summary']}")
+else:
+    print("*プロジェクトはまだありません*")
+]] -->
+*プロジェクトはまだありません*
+<!-- [[[end]]] -->
+
+## 使い方
+
+### 新しい研究プロジェクトの作成
+
+1. プロジェクト名のディレクトリを作成
+2. そのディレクトリ内でコードと実験を実行
+3. README.mdにプロジェクトの概要を記述
+4. オプション：`_summary.md`を作成して一行サマリーを記述（自動生成を避ける場合）
+
+### 注意事項
+
+- このリポジトリの内容はAIによって生成されています
+- 実用に使用する前に、人間による詳細なレビューが必要です
+- 実験的なコードであり、本番環境での使用は推奨されません
+
+## 自動化
+
+GitHub Actionsを使用してREADMEを自動更新します。新しいプロジェクトが追加されると、ワークフローが自動的にプロジェクト一覧を更新します。
+
+## ライセンス
+
+このリポジトリのコンテンツはLICENSEファイルに従います。
