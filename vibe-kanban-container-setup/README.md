@@ -44,6 +44,40 @@ vibe-kanbanは、Claude Code、Gemini CLI、Codex、Ampなどの複数のAIコ�
 - `GITHUB_CLIENT_ID`: GitHub OAuth認証（ビルド時）
 - `POSTHOG_API_KEY`: PostHog分析（ビルド時）
 
+### コーディングエージェントの設定
+
+vibe-kanbanは複数のAIコーディングエージェント（Claude Code、Gemini CLI、Cursor CLI、GitHub Copilot CLI、OpenAI Codex等）を統合管理します。
+
+⚠️ **重要**: 各エージェントはvibe-kanbanを起動する前に個別に認証が必要です。
+
+詳細な設定方法とAPI keyの管理については、**[CODING_AGENTS.md](CODING_AGENTS.md)** を参照してください。主なトピック：
+
+- サポートされているコーディングエージェント一覧
+- 各エージェントの認証方法（API key、ブラウザ認証等）
+- コンテナ環境での認証情報の安全な管理
+- Docker Secrets / Kubernetes Secrets の使用
+- セキュリティベストプラクティス
+- トラブルシューティング
+
+**クイックスタート**:
+
+```bash
+# 1. .envファイルを作成
+cp .env.agents.example .env
+
+# 2. API keyを設定（エディタで編集）
+vi .env
+
+# 3. パーミッション設定
+chmod 600 .env
+
+# 4. コンテナ起動
+docker-compose -f docker-compose.agents.yml up -d
+
+# 5. 設定確認
+./check-agents.sh
+```
+
 ### ホストからの認証情報の引き継ぎ
 
 vibe-kanbanをコンテナで実行する際、SSH鍵やGit認証情報など、ホストの認証情報を安全に引き継ぐ必要がある場合があります。
