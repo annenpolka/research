@@ -56,6 +56,38 @@ vibe-kanbanをコンテナで実行する際、SSH鍵やGit認証情報など、
 - Docker Secrets / Kubernetes Secrets の使用
 - セキュリティベストプラクティス
 
+### コンテナ内でプロジェクトを扱う方法
+
+⚠️ **重要**: 単にコンテナを起動しただけでは、実際のプロジェクトファイルにアクセスできません。
+
+vibe-kanbanで実際の開発作業を行うには、ホストのプロジェクトディレクトリをコンテナの`/repos`にマウントする必要があります。
+
+詳細な実装方法とトラブルシューティングについては、**[PROJECT_MANAGEMENT.md](PROJECT_MANAGEMENT.md)** を参照してください。主なトピック：
+
+- プロジェクトディレクトリのマウント方法
+- ファイルパーミッション問題の解決（UID/GID）
+- 複数プロジェクトの管理
+- リモートプロジェクトへのSSHアクセス
+- Docker-in-Docker (DinD) の設定
+- 実用的な設定例とトラブルシューティング
+
+**クイックスタート**:
+
+```bash
+# 便利スクリプトを使用
+./start-with-project.sh ~/projects/my-app
+
+# または手動で
+docker run -d \
+  --name vibe-kanban \
+  -p 3000:3000 \
+  -v ~/projects/my-app:/repos/my-app:rw \
+  -v ~/.ssh/config:/home/appuser/.ssh/config:ro \
+  -v ~/.gitconfig:/home/appuser/.gitconfig:ro \
+  --user $(id -u):$(id -g) \
+  vibe-kanban:latest
+```
+
 ## 隔離されたコンテナでの実行方法
 
 ### 方法1: 既存のDockerfileを使用
