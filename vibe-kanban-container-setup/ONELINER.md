@@ -41,18 +41,53 @@ docker run -d --name vibe-kanban -p 3000:3000 \
 echo "✅ 起動完了！ http://localhost:3000にアクセスしてください"
 ```
 
-### 設定ファイルマウント方式（短期テスト用）
+### 全部入り（Claude + Gemini + OpenAI Codex）
+
+```bash
+docker run -d --name vibe-kanban -p 3000:3000 \
+  -e CLAUDE_CODE_OAUTH_TOKEN=<YOUR_CLAUDE_TOKEN> \
+  -e GEMINI_API_KEY=<YOUR_GEMINI_KEY> \
+  -e OPENAI_API_KEY=<YOUR_OPENAI_KEY> \
+  -v ~/projects/my-app:/repos/my-app:rw \
+  --user $(id -u):$(id -g) \
+  vibe-kanban:latest && \
+echo "✅ 起動完了！ 3つのエージェントが利用可能です - http://localhost:3000"
+```
+
+### 全部ログイン方式（Claude + Codex）+ Gemini
+
+**前提**:
+- `npx @anthropic-ai/claude-code` で認証（6時間有効）
+- `codex login` でChatGPTログイン
+
+```bash
+docker run -d --name vibe-kanban -p 3000:3000 \
+  -e GEMINI_API_KEY=<YOUR_GEMINI_KEY> \
+  -v ~/.claude:/root/.claude:ro \
+  -v ~/.codex:/root/.codex:ro \
+  -v ~/projects/my-app:/repos/my-app:rw \
+  --user $(id -u):$(id -g) \
+  vibe-kanban:latest && \
+echo "✅ 起動完了！ ChatGPTアカウントでClaude & Codex使用可能 - http://localhost:3000"
+```
+
+⚠️ **注意**:
+- Claude: トークンは約6時間で期限切れ
+- Codex: auth.jsonはホスト非依存で長期間有効
+
+### 設定ファイルマウント方式（短期テスト用・Claude のみ）
 
 **前提**: 事前に`npx @anthropic-ai/claude-code`で認証（6時間有効）
 
 ```bash
 docker run -d --name vibe-kanban -p 3000:3000 \
   -e GEMINI_API_KEY=<YOUR_GEMINI_KEY> \
+  -e OPENAI_API_KEY=<YOUR_OPENAI_KEY> \
   -v ~/.claude:/root/.claude:ro \
   -v ~/projects/my-app:/repos/my-app:rw \
   --user $(id -u):$(id -g) \
   vibe-kanban:latest && \
-echo "⚠️  トークンは6時間で期限切れ | ✅ 起動完了！ http://localhost:3000"
+echo "⚠️  Claudeトークンは6時間で期限切れ | ✅ 起動完了！ http://localhost:3000"
 ```
 
 ## 🔧 環境変数ファイル使用（.env）

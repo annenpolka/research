@@ -40,6 +40,28 @@ if [ "$AUTH_METHOD" = "1" ]; then
     echo ""
     read -p "🔑 GEMINI_API_KEY を入力（Enterでスキップ）: " GEMINI_KEY
 
+    echo ""
+    echo "📝 OpenAI Codex認証方法を選択:"
+    echo "1) ChatGPTアカウントログイン（事前に 'codex login' 実行済み）"
+    echo "2) API key"
+    echo "3) スキップ"
+    read -p "選択 (1/2/3): " CODEX_METHOD
+
+    OPENAI_KEY=""
+    CODEX_MOUNT=""
+    if [ "$CODEX_METHOD" = "1" ]; then
+        if [ -f "$HOME/.codex/auth.json" ]; then
+            CODEX_MOUNT="-v $HOME/.codex:/root/.codex:ro"
+            echo "✅ ~/.codex/auth.json を使用します"
+        else
+            echo "❌ エラー: ~/.codex/auth.json が見つかりません"
+            echo "   'codex login' を実行してください"
+            exit 1
+        fi
+    elif [ "$CODEX_METHOD" = "2" ]; then
+        read -p "🔑 OPENAI_API_KEY を入力: " OPENAI_KEY
+    fi
+
     # Docker実行
     echo ""
     echo "🐳 vibe-kanbanを起動中..."
@@ -49,6 +71,8 @@ if [ "$AUTH_METHOD" = "1" ]; then
         -p 3000:3000 \
         -e CLAUDE_CODE_OAUTH_TOKEN="$CLAUDE_TOKEN" \
         ${GEMINI_KEY:+-e GEMINI_API_KEY="$GEMINI_KEY"} \
+        ${OPENAI_KEY:+-e OPENAI_API_KEY="$OPENAI_KEY"} \
+        $CODEX_MOUNT \
         -v "$PROJECT_DIR:/repos/$(basename $PROJECT_DIR):rw" \
         --user "$(id -u):$(id -g)" \
         vibe-kanban:latest
@@ -74,6 +98,28 @@ elif [ "$AUTH_METHOD" = "2" ]; then
     echo ""
     read -p "🔑 GEMINI_API_KEY を入力（Enterでスキップ）: " GEMINI_KEY
 
+    echo ""
+    echo "📝 OpenAI Codex認証方法を選択:"
+    echo "1) ChatGPTアカウントログイン（事前に 'codex login' 実行済み）"
+    echo "2) API key"
+    echo "3) スキップ"
+    read -p "選択 (1/2/3): " CODEX_METHOD
+
+    OPENAI_KEY=""
+    CODEX_MOUNT=""
+    if [ "$CODEX_METHOD" = "1" ]; then
+        if [ -f "$HOME/.codex/auth.json" ]; then
+            CODEX_MOUNT="-v $HOME/.codex:/root/.codex:ro"
+            echo "✅ ~/.codex/auth.json を使用します"
+        else
+            echo "❌ エラー: ~/.codex/auth.json が見つかりません"
+            echo "   'codex login' を実行してください"
+            exit 1
+        fi
+    elif [ "$CODEX_METHOD" = "2" ]; then
+        read -p "🔑 OPENAI_API_KEY を入力: " OPENAI_KEY
+    fi
+
     # Docker実行
     echo ""
     echo "🐳 vibe-kanbanを起動中..."
@@ -82,6 +128,8 @@ elif [ "$AUTH_METHOD" = "2" ]; then
         --name vibe-kanban \
         -p 3000:3000 \
         ${GEMINI_KEY:+-e GEMINI_API_KEY="$GEMINI_KEY"} \
+        ${OPENAI_KEY:+-e OPENAI_API_KEY="$OPENAI_KEY"} \
+        $CODEX_MOUNT \
         -v "$HOME/.claude:/root/.claude:ro" \
         -v "$PROJECT_DIR:/repos/$(basename $PROJECT_DIR):rw" \
         --user "$(id -u):$(id -g)" \

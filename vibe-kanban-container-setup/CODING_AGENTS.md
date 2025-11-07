@@ -240,21 +240,57 @@ OpenCodeは**vibe-kanbanの外で事前に認証**する必要があります。
 
 ### 6. OpenAI Codex
 
-#### 認証方法
+Codex CLIは2つの認証方法をサポートしています。
 
-OpenAI API キーを使用します。
+#### ホスト実行の場合
 
-**API キーの取得**:
+**方法A: ChatGPTアカウントログイン（推奨）**
+
+ChatGPT Plus/Pro/Team/Edu/Enterpriseアカウントでログイン可能。
+
+```bash
+# ホストで実行する場合
+codex login
+# ブラウザでChatGPTログインフローが開きます
+```
+
+**方法B: API Key**
+
+```bash
+# API keyで認証
+printenv OPENAI_API_KEY | codex login --with-api-key
+```
+
+#### Docker実行の場合
+
+**方法1: 設定ファイルマウント（推奨）**
+
+```bash
+# ホストで一度ログイン
+codex login
+# ~/.codex/auth.json が作成される
+
+# Docker実行時に設定ファイルをマウント
+docker run -v ~/.codex:/root/.codex:ro vibe-kanban
+```
+
+**認証ファイルの場所**：
+- **macOS/Linux**: `~/.codex/auth.json`
+- **Windows**: `%USERPROFILE%\.codex\auth.json`
+
+⚠️ **利点**: auth.jsonはホスト非依存で、Claude Codeと違い**長期間有効**。
+
+**方法2: API Key**
+
+```bash
+docker run -e OPENAI_API_KEY=sk-your-openai-key vibe-kanban
+```
+
+#### API キーの取得
 
 1. [OpenAI Platform](https://platform.openai.com/api-keys)にログイン
 2. 「Create new secret key」をクリック
 3. キーをコピーして保存
-
-**環境変数での設定**:
-
-```bash
-export OPENAI_API_KEY="sk-your-openai-api-key-here"
-```
 
 ---
 

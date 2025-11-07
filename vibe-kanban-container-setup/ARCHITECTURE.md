@@ -276,13 +276,41 @@ Google AI Studio で取得したAPI keyを使用。Claude Codeより認証はシ
 
 ### OpenAI Codexの場合
 
+Codex CLIは2つの認証方法をサポートしています。
+
+#### 方法1: ChatGPTアカウントログイン（推奨）
+
+ChatGPT Plus/Pro/Team/Edu/Enterpriseアカウントでログイン可能。
+
+```bash
+# ホストで一度ログイン
+codex login
+# ~/.codex/auth.json が作成される
+
+# Docker実行時に設定ファイルをマウント
+docker run -d \
+  --name vibe-kanban \
+  -p 3000:3000 \
+  -v ~/.codex:/root/.codex:ro \
+  -v ~/projects:/repos:rw \
+  vibe-kanban:latest
+```
+
+**認証ファイルの場所**：
+- **macOS/Linux**: `~/.codex/auth.json`
+- **Windows**: `%USERPROFILE%\.codex\auth.json`
+
+⚠️ **注意**: auth.jsonはホスト非依存なので、コピーして使用可能。
+
+#### 方法2: API Key
+
 ```bash
 docker run -d \
   -e OPENAI_API_KEY=sk-your-openai-key \
   vibe-kanban:latest
 ```
 
-OpenAI Platform で取得したAPI keyを使用。
+OpenAI Platform で取得したAPI keyを使用（従量課金）。
 
 ### GitHub Copilotの場合（設定ファイル必要の可能性）
 
@@ -301,6 +329,21 @@ docker run -d \
 GitHub Copilot CLIは設定ファイルに依存する場合があります。
 
 ### 複数エージェントを同時に使う場合
+
+**パターン1: OAuth/ログイン認証のみ**（API keyなし）
+
+```bash
+docker run -d \
+  --name vibe-kanban \
+  -p 3000:3000 \
+  -e GEMINI_API_KEY=your-gemini-key \
+  -v ~/.claude:/root/.claude:ro \
+  -v ~/.codex:/root/.codex:ro \
+  -v ~/projects:/repos:rw \
+  vibe-kanban:latest
+```
+
+**パターン2: API key併用**
 
 ```bash
 docker run -d \
