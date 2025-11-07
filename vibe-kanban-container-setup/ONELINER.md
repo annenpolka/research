@@ -5,7 +5,7 @@
 ## 🚀 超速セットアップ（対話式）
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/YOUR_REPO/vibe-kanban-container-setup/main/quick-setup.sh | bash
+curl -fsSL https://raw.githubusercontent.com/annenpolka/research/main/vibe-kanban-container-setup/quick-setup.sh | bash
 ```
 
 または、ローカルにダウンロードして実行：
