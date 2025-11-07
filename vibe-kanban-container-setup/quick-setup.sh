@@ -53,8 +53,8 @@ echo ""
 echo "🔐 認証方法を選択してください:"
 echo "1) OAuth Token方式（推奨・長期運用向け）"
 echo "2) 設定ファイルマウント方式（簡単・短期テスト用、6時間で期限切れ）"
-read -p "選択 (1/2) [デフォルト: 2]: " AUTH_METHOD < /dev/tty
-AUTH_METHOD=${AUTH_METHOD:-2}
+read -p "選択 (1/2) [デフォルト: 1]: " AUTH_METHOD < /dev/tty
+AUTH_METHOD=${AUTH_METHOD:-1}
 
 if [ "$AUTH_METHOD" = "1" ]; then
     echo ""
@@ -84,8 +84,8 @@ if [ "$AUTH_METHOD" = "1" ]; then
     echo "1) ChatGPTアカウントログイン（事前に 'codex login' 実行済み）"
     echo "2) API key"
     echo "3) スキップ"
-    read -p "選択 (1/2/3) [デフォルト: 3]: " CODEX_METHOD < /dev/tty
-    CODEX_METHOD=${CODEX_METHOD:-3}
+    read -p "選択 (1/2/3) [デフォルト: 1]: " CODEX_METHOD < /dev/tty
+    CODEX_METHOD=${CODEX_METHOD:-1}
 
     OPENAI_KEY=""
     CODEX_MOUNT=""
@@ -144,8 +144,8 @@ elif [ "$AUTH_METHOD" = "2" ]; then
     echo "1) ChatGPTアカウントログイン（事前に 'codex login' 実行済み）"
     echo "2) API key"
     echo "3) スキップ"
-    read -p "選択 (1/2/3) [デフォルト: 3]: " CODEX_METHOD < /dev/tty
-    CODEX_METHOD=${CODEX_METHOD:-3}
+    read -p "選択 (1/2/3) [デフォルト: 1]: " CODEX_METHOD < /dev/tty
+    CODEX_METHOD=${CODEX_METHOD:-1}
 
     OPENAI_KEY=""
     CODEX_MOUNT=""
