@@ -307,12 +307,14 @@ docker run -d \
 echo ".env" >> .gitignore
 ```
 
-### 方法1-B: 設定ファイルマウント（より簡単）
+### 方法1-B: 設定ファイルマウント（短期テスト用）
+
+⚠️ **制限事項**: `~/.claude/.credentials.json`のトークンは**約6時間で期限切れ**。長期運用には方法1のOAuth Token推奨。
 
 ```bash
 # ステップ1: ホストで一度認証
 npx @anthropic-ai/claude-code
-# ~/.claude/settings.json が作成されます（macOS/Linux/WSL共通）
+# ~/.claude/.credentials.json が作成されます（6時間有効）
 
 # ステップ2: .envファイルを作成（Claude Code除く）
 # .env
@@ -340,9 +342,9 @@ docker run -d `
   vibe-kanban:latest
 ```
 
-**設定ファイルの場所**：
-- **macOS/Linux/WSL**: `~/.claude/settings.json`
-- **Windows（PowerShell）**: `$env:USERPROFILE\.claude\settings.json`
+**認証ファイルの場所**：
+- **macOS/Linux/WSL**: `~/.claude/.credentials.json` (OAuth トークン、6時間有効)
+- **Windows（PowerShell）**: `$env:USERPROFILE\.claude\.credentials.json`
 - **注意**: WSLでは必ずLinux filesystem内（`~/.claude/`）を使用。Windows側（`/mnt/c/`）ではありません。
 
 ---

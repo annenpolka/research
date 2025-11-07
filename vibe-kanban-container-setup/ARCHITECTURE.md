@@ -229,12 +229,14 @@ docker run -d \
   vibe-kanban:latest
 ```
 
-**方法2: 設定ファイルマウント**
+**方法2: 設定ファイルマウント（短期利用のみ）**
+
+⚠️ **制限事項**: `~/.claude/.credentials.json`のトークンは**約6時間で期限切れ**になります。長期運用にはOAuth Token方式を使用してください。
 
 ```bash
 # ホストで認証（一度だけ）
 npx @anthropic-ai/claude-code
-# ~/.claude/settings.json が作成される
+# ~/.claude/.credentials.json が作成される（6時間有効）
 
 # Docker実行時に設定ファイルをマウント
 docker run -d \
@@ -245,7 +247,11 @@ docker run -d \
   vibe-kanban:latest
 ```
 
-**方法3: API key + 設定ファイル併用（実験的）**
+**認証ファイルの場所**：
+- `~/.claude/.credentials.json` - OAuth トークン（6時間有効）
+- `~/.claude/settings.json` - ユーザー設定（認証情報なし）
+
+**方法3: API key + 設定ファイル併用（実験的・非推奨）**
 
 ```bash
 # ANTHROPIC_API_KEYと設定ファイルを両方渡す
@@ -502,11 +508,14 @@ docker run -d \
 # エージェントCLIは自動的にダウンロード・実行される
 ```
 
-**代替案**: 設定ファイルマウント方式
+**代替案**: 設定ファイルマウント方式（短期テスト用）
+
+⚠️ **注意**: トークンは約6時間で期限切れ。本番運用には上記のOAuth Token方式を推奨。
 
 ```bash
 # 1. ホストで一度認証（一度だけ）
 npx @anthropic-ai/claude-code
+# ~/.claude/.credentials.json が作成される（6時間有効）
 
 # 2. vibe-kanbanを起動（設定ファイルをマウント）
 docker run -d \
