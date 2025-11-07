@@ -53,7 +53,7 @@
 2. **`.gitattributes`の変更**
    - カスタムマージドライバーを設定するため、`.gitattributes`に以下を追加:
 
-     ```
+     ```gitattributes
      .beads/beads.jsonl merge=beads
      ```
 
@@ -62,7 +62,7 @@
 3. **git configの変更**
    - ローカルまたはグローバルgit設定にマージドライバーを追加:
 
-     ```
+     ```bash
      git config merge.beads.driver "bd merge %A %O %L %R"
      git config merge.beads.name "bd JSONL merge driver"
      ```
@@ -91,7 +91,7 @@ READMEとAGENTS.mdによると、以下の手順が推奨されています:
 
 2. **AGENTS.mdに以下を追加**（手動）
 
-   ```
+   ```text
    BEFORE ANYTHING ELSE: run 'bd onboard' and follow the instructions
    ```
 
@@ -246,8 +246,6 @@ echo ".beads/" >> .git/info/exclude
 
 注意: `.beads/`は`.git/info/exclude`により除外され、コミット対象外です。
 
-```
-
 ### 推奨
 
 - **新規プロジェクト**: パターン1（簡潔版）
@@ -259,10 +257,12 @@ echo ".beads/" >> .git/info/exclude
 AGENTS.mdに一切追記せず、必要に応じてエージェントに口頭（チャット）で指示する方法もあります:
 
 **メリット:**
+
 - ✅ AGENTS.mdへの変更ゼロ（完全非侵襲）
 - ✅ 柔軟性が高い
 
 **デメリット:**
+
 - ❌ エージェントがbeadsの存在を知らない
 - ❌ 毎回説明が必要
 
@@ -388,7 +388,7 @@ AI assistants often create planning and design documents during development:
 
 **Example .gitignore entry (optional):**
 
-```
+```gitignore
 # AI planning documents (ephemeral)
 history/
 ```
@@ -415,8 +415,6 @@ history/
 
 For more details, see README.md and QUICKSTART.md.
 
-```
-
 </details>
 
 ### 完全ローカル運用時の調整点
@@ -426,6 +424,7 @@ For more details, see README.md and QUICKSTART.md.
 #### 削除/調整すべき箇所
 
 1. **"Commit together"の記述（ステップ6）**
+
    ```markdown
    6. **Commit together**: Always commit the `.beads/issues.jsonl` file together with the code changes so issue state stays in sync with code state
    ```
@@ -601,7 +600,7 @@ AI assistants often create planning and design documents during development:
 
 **Example .gitignore entry (optional):**
 
-```
+```gitignore
 # AI planning documents (ephemeral)
 history/
 ```
