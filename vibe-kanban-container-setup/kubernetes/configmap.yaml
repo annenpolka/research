@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vibe-kanban-config
+  labels:
+    app: vibe-kanban
+data:
+  # 環境変数
+  PORT: "3000"
+  HOST: "0.0.0.0"
+
+  # その他の設定ファイル（必要に応じて）
+  # app-config.json: |
+  #   {
+  #     "feature_flags": {
+  #       "enable_telemetry": false
+  #     }
+  #   }
+
+---
+# Secretの例（実際の値は別途管理すること）
+apiVersion: v1
+kind: Secret
+metadata:
+  name: vibe-kanban-secrets
+  labels:
+    app: vibe-kanban
+type: Opaque
+stringData:
+  # 実際の値はbase64エンコードまたはkubectl create secretで設定
+  github-client-id: "your-github-client-id"
+  posthog-api-key: "your-posthog-api-key"
+
+# Secretの作成コマンド例:
+# kubectl create secret generic vibe-kanban-secrets \
+#   --from-literal=github-client-id=YOUR_CLIENT_ID \
+#   --from-literal=posthog-api-key=YOUR_API_KEY \
+#   --dry-run=client -o yaml | kubectl apply -f -

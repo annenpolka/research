@@ -1,0 +1,72 @@
+#include <tunables/global>
+
+profile docker-vibe-kanban flags=(attach_disconnected,mediate_deleted) {
+  #include <abstractions/base>
+
+  # ネットワークアクセス
+  network inet stream,
+  network inet6 stream,
+  network inet dgram,
+  network inet6 dgram,
+
+  # ファイルシステムアクセス
+  # アプリケーションディレクトリ（読み取り専用）
+  /app/** r,
+  /app/server ix,
+  /app/dist/** r,
+
+  # 一時ファイル
+  /tmp/** rw,
+  /repos/** rw,
+
+  # 必要なシステムファイル
+  /etc/passwd r,
+  /etc/group r,
+  /etc/hosts r,
+  /etc/resolv.conf r,
+  /etc/nsswitch.conf r,
+  /etc/ssl/certs/** r,
+
+  # procとsys（読み取り専用）
+  @{PROC}/@{pid}/** r,
+  @{PROC}/sys/kernel/random/uuid r,
+  /sys/kernel/mm/transparent_hugepage/hpage_pmd_size r,
+
+  # デバイスファイル
+  /dev/null rw,
+  /dev/zero r,
+  /dev/random r,
+  /dev/urandom r,
+  /dev/tty rw,
+
+  # 共有ライブラリ
+  /lib/** rm,
+  /usr/lib/** rm,
+
+  # 禁止事項
+  deny /bin/** wl,
+  deny /boot/** rwlx,
+  deny /home/** rwlx,
+  deny /root/** rwlx,
+  deny /etc/shadow rwlx,
+  deny /etc/gshadow rwlx,
+  deny /etc/sudoers rwlx,
+  deny /sys/** w,
+  deny @{PROC}/sys/** w,
+  deny @{PROC}/sysrq-trigger rwlx,
+  deny @{PROC}/kcore rwlx,
+  deny @{PROC}/kmem rwlx,
+  deny @{PROC}/mem rwlx,
+
+  # ケーパビリティの制限
+  deny capability dac_override,
+  deny capability dac_read_search,
+  deny capability sys_admin,
+  deny capability sys_module,
+  deny capability sys_rawio,
+  deny capability sys_ptrace,
+  deny capability sys_boot,
+
+  # シグナルの制限
+  signal (send) set=(term, kill) peer=docker-vibe-kanban,
+}

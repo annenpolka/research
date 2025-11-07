@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  vibe-kanban:
+    build:
+      context: https://github.com/BloopAI/vibe-kanban.git
+      dockerfile: Dockerfile
+    image: vibe-kanban:latest
+    container_name: vibe-kanban
+
+    # ポートマッピング
+    ports:
+      - "3000:3000"
+
+    # 環境変数
+    environment:
+      - PORT=3000
+      - HOST=0.0.0.0
+      # 必要に応じて以下を追加
+      # - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      # - POSTHOG_API_KEY=${POSTHOG_API_KEY}
+
+    # リソース制限
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+    # セキュリティ設定
+    security_opt:
+      - no-new-privileges:true
+
+    # 読み取り専用ファイルシステム
+    read_only: true
+
+    # 一時ファイル用のtmpfs
+    tmpfs:
+      - /tmp:size=100M,mode=1777
+      - /repos:size=500M,mode=1777
+
+    # ケーパビリティの削除
+    cap_drop:
+      - ALL
+
+    # 必要最小限のケーパビリティのみ追加
+    # cap_add:
+    #   - CHOWN  # 必要な場合のみコメントを外す
+
+    # PID制限
+    pids_limit: 100
+
+    # ネットワーク設定
+    networks:
+      - vibe-kanban-network
+
+    # ヘルスチェック（Dockerfileに既にある場合は上書き）
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    # 再起動ポリシー
+    restart: unless-stopped
+
+    # ログ設定
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  vibe-kanban-network:
+    driver: bridge
+    # 内部ネットワークとして設定（外部アクセスを制限）
+    # internal: true
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16

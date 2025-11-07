@@ -1,0 +1,96 @@
+# セキュリティ強化版Dockerfile
+# vibe-kanban用の隔離されたコンテナ環境
+
+# ===========================
+# ビルドステージ
+# ===========================
+FROM node:24-alpine AS builder
+
+# セキュリティアップデート
+RUN apk update && apk upgrade --no-cache
+
+# ビルドに必要な依存関係のインストール
+RUN apk add --no-cache \
+    curl \
+    build-base \
+    perl \
+    llvm-dev \
+    clang-dev
+
+# Rustのインストール
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# 作業ディレクトリの設定
+WORKDIR /build
+
+# pnpmのインストール
+RUN npm install -g pnpm
+
+# リポジトリのクローン
+RUN apk add --no-cache git && \
+    git clone https://github.com/BloopAI/vibe-kanban.git . && \
+    apk del git
+
+# 依存関係のインストール
+RUN pnpm install --frozen-lockfile
+
+# 型定義の生成
+RUN pnpm run generate-types
+
+# フロントエンドのビルド
+RUN pnpm run build
+
+# Rustバックエンドのビルド
+RUN cargo build --release --bin server
+
+# ===========================
+# ランタイムステージ
+# ===========================
+FROM alpine:latest AS runtime
+
+# セキュリティアップデート
+RUN apk update && apk upgrade --no-cache
+
+# ランタイムに必要な最小限の依存関係
+RUN apk add --no-cache \
+    ca-certificates \
+    tini \
+    wget
+
+# 非rootユーザーの作成
+RUN addgroup -g 1000 -S appgroup && \
+    adduser -u 1000 -S appuser -G appgroup -h /app -s /sbin/nologin
+
+# 作業ディレクトリの設定
+WORKDIR /app
+
+# ビルドステージからバイナリとアセットをコピー
+COPY --from=builder --chown=appuser:appgroup /build/target/release/server /app/server
+COPY --from=builder --chown=appuser:appgroup /build/dist /app/dist
+
+# リポジトリディレクトリの作成
+RUN mkdir -p /repos && chown appuser:appgroup /repos
+
+# tmpディレクトリの作成
+RUN mkdir -p /tmp && chmod 1777 /tmp
+
+# ユーザーの切り替え
+USER appuser
+
+# 環境変数の設定
+ENV PORT=3000
+ENV HOST=0.0.0.0
+
+# ポートの公開
+EXPOSE 3000
+
+# ヘルスチェック
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+
+# tiniをinitプロセスとして使用
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# アプリケーションの起動
+CMD ["/app/server"]

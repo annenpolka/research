@@ -1,0 +1,62 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: vibe-kanban-netpol
+  labels:
+    app: vibe-kanban
+spec:
+  podSelector:
+    matchLabels:
+      app: vibe-kanban
+  policyTypes:
+  - Ingress
+  - Egress
+
+  # Ingressルール: どこからのトラフィックを許可するか
+  ingress:
+  - from:
+    # 同じネームスペース内のPodから
+    - podSelector: {}
+    # または特定のネームスペースから
+    # - namespaceSelector:
+    #     matchLabels:
+    #       name: frontend
+    # Ingressコントローラーから
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 3000
+
+  # Egressルール: どこへのトラフィックを許可するか
+  egress:
+  # DNS解決を許可
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+
+  # HTTPS通信を許可（パッケージダウンロードなど）
+  - to:
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: 443
+
+  # HTTP通信を許可（必要に応じて）
+  # - to:
+  #   - podSelector: {}
+  #   ports:
+  #   - protocol: TCP
+  #     port: 80
+
+  # 完全に隔離する場合は、特定のIPアドレスやCIDRのみ許可
+  # - to:
+  #   - ipBlock:
+  #       cidr: 10.0.0.0/8
+  #       except:
+  #       - 10.0.1.0/24
