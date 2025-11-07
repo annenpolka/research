@@ -48,9 +48,25 @@ vibe-kanbanは、Claude Code、Gemini CLI、Codex、Ampなどの複数のAIコ�
 
 vibe-kanbanは複数のAIコーディングエージェント（Claude Code、Gemini CLI、Cursor CLI、GitHub Copilot CLI、OpenAI Codex等）を統合管理します。
 
-⚠️ **重要**: 各エージェントはvibe-kanbanを起動する前に個別に認証が必要です。
+⚠️ **重要な理解**:
 
-詳細な設定方法とAPI keyの管理については、**[CODING_AGENTS.md](CODING_AGENTS.md)** を参照してください。主なトピック：
+1. **vibe-kanbanはエージェント本体を含みません**
+   - vibe-kanbanはオーケストレーションツール（管理ツール）
+   - 実際のコード生成はエージェントが実行
+
+2. **エージェントはホスト側で実行**
+   - エージェント（Claude Code等）をホストにインストール
+   - ホスト側で認証を完了
+   - vibe-kanbanコンテナ内にエージェントをインストールする必要は**ありません**
+
+3. **vibe-kanbanの役割**
+   - Webベースのカンバンボード
+   - タスク管理と可視化
+   - エージェント設定の一元管理
+
+詳しいアーキテクチャについては、**[ARCHITECTURE.md](ARCHITECTURE.md)** を参照してください。
+
+エージェントの認証方法とAPI keyの管理については、**[CODING_AGENTS.md](CODING_AGENTS.md)** を参照してください。主なトピック：
 
 - サポートされているコーディングエージェント一覧
 - 各エージェントの認証方法（API key、ブラウザ認証等）
