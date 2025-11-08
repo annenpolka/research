@@ -26,53 +26,43 @@
 
 ## Installation Methods
 
-### Method 1: Via Marketplace (Recommended)
+### Method 1: Local Installation (Recommended)
 
-**Step 1**: Start Claude Code
+This is the most reliable method and works for development/testing.
+
+**Step 1**: Clone the repository
 ```bash
-claude
-```
-
-**Step 2**: Add the marketplace (in Claude)
-```
-/plugin marketplace add https://raw.githubusercontent.com/annenpolka/research/main/multi-agent-coordinator/plugin-v2/.claude-plugin/marketplace.json
-```
-
-**Step 3**: Install the plugin (in Claude)
-```
-/plugin install swarm-coordinator
-```
-
-Or use interactive mode:
-```
-/plugin
-```
-Then select "Browse Plugins" → "swarm-coordinator"
-
-### Method 2: GitHub Repository
-
-**In Claude Code:**
-```
-/plugin marketplace add annenpolka/research
-/plugin install swarm-coordinator@annenpolka
-```
-
-### Method 3: Local Installation (Development)
-
-```bash
-# Clone the repository
 git clone https://github.com/annenpolka/research.git
 cd research/multi-agent-coordinator/plugin-v2
+```
 
-# Start Claude Code in this directory
+**Step 2**: Start Claude Code in the plugin directory
+```bash
 claude
 ```
 
-**In Claude:**
+**Step 3**: Add the marketplace and install (in Claude)
 ```
 /plugin marketplace add .
 /plugin install swarm-coordinator
 ```
+
+**Verification**:
+```
+/plugin
+```
+You should see "swarm-coordinator" installed.
+
+### Method 2: Direct Plugin Installation (Alternative)
+
+If you already cloned the repository, you can install the plugin directly:
+
+**In Claude Code (from any directory):**
+```
+/plugin install /absolute/path/to/research/multi-agent-coordinator/plugin-v2
+```
+
+Replace `/absolute/path/to/` with the actual path.
 
 ## Verification
 
@@ -185,14 +175,27 @@ npm update -g @anthropic-ai/claude-code
 curl -fsSL https://claude.ai/install.sh | bash
 ```
 
-### "Marketplace not found"
+### "Invalid marketplace schema" or schema validation errors
 
-Verify the URL is accessible:
-```bash
-curl -I https://raw.githubusercontent.com/annenpolka/research/main/multi-agent-coordinator/plugin-v2/.claude-plugin/marketplace.json
+If you get errors like:
+```
+Error: Invalid marketplace schema from URL: name: Marketplace name cannot contain spaces...
 ```
 
-Should return HTTP 200.
+This means you tried to use a GitHub raw URL directly. **This is not supported.** Instead:
+
+1. **Use Method 1 (Recommended)**: Clone the repository and add the marketplace locally:
+   ```bash
+   git clone https://github.com/annenpolka/research.git
+   cd research/multi-agent-coordinator/plugin-v2
+   claude
+   ```
+   Then in Claude: `/plugin marketplace add .`
+
+2. **Or use Method 2**: Install directly with absolute path:
+   ```
+   /plugin install /path/to/research/multi-agent-coordinator/plugin-v2
+   ```
 
 ### Scripts not executable
 
