@@ -148,6 +148,10 @@ docker run -d \
 
 vibe-kanbanをコンテナで実行する際、SSH鍵やGit認証情報など、ホストの認証情報を安全に引き継ぐ必要がある場合があります。
 
+**📖 ドキュメント**:
+- **[SSH_SETUP.md](SSH_SETUP.md)** - SSH接続のセットアップガイド（実践的な手順とトラブルシューティング）
+- **[CREDENTIALS.md](CREDENTIALS.md)** - 認証情報管理の包括的なガイド
+
 詳細な実装方法とベストプラクティスについては、**[CREDENTIALS.md](CREDENTIALS.md)** を参照してください。主なトピック：
 
 - SSHキーの引き継ぎ（SSHエージェントフォワーディング推奨）
