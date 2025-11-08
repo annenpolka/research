@@ -2,9 +2,31 @@
 
 **非侵襲的で軽量なマルチエージェント調整システム**
 
+## 🚀 クイックスタート（プラグイン版）
+
+```bash
+# 1コマンドでインストール
+claude-code plugin install swarm-coordinator
+
+# MCPサーバーをビルド（初回のみ）
+cd .claude/plugins/swarm-coordinator/mcp-servers/swarm-coordinator
+npm install && npm run build
+
+# 使用開始
+claude-code
+```
+
+詳細は [PLUGIN.md](./PLUGIN.md) を参照してください。
+
+---
+
 ## 概要
 
 このプロジェクトは、Claude Codeの複数インスタンスを効率的に管理するための調整システムを提案します。既存の3つの優れたアプローチ（mcp_agent_mail、claude-code-hooks-multi-agent-observability、beads）から学んだベストプラクティスを統合し、シンプルでエレガントな設計を実現します。
+
+**2つの使用方法:**
+- 🔌 **プラグイン版** (推奨): 1コマンドインストール、自動セットアップ
+- 📦 **手動セットアップ版**: カスタマイズ可能、学習用
 
 ## 背景と動機
 
@@ -186,44 +208,68 @@ tasks:
 
 ## インストールと設定
 
-### 前提条件
+### 方法1: プラグイン版（推奨）
 
-- Claude Code CLI
-- Python 3.9+ （フック用）
-- Node.js 18+ （MCPサーバー用、オプション）
+**前提条件**: Claude Code CLI
 
-### セットアップ
+**インストール**:
 
 ```bash
-# 1. プロジェクトルートで初期化
-cd your-project
-claude-swarm init
+# プラグインインストール
+claude-code plugin install swarm-coordinator
 
-# 2. 自動的に以下を作成:
-#    .claude/swarm/
-#    .claude/hooks/hooks.json (coordination hooks追加)
-#    .claude/.mcp.json (swarm MCPサーバー追加)
-
-# 3. エージェント設定（オプション）
-cat > .claude/swarm/config.yaml <<EOF
-coordination:
-  lock_timeout: 300  # 5分でロック自動解放
-  max_agents: 5      # 最大5エージェント同時実行
-
-observability:
-  enabled: true
-  dashboard_port: 3030
-EOF
+# MCPサーバービルド（初回のみ）
+cd .claude/plugins/swarm-coordinator/mcp-servers/swarm-coordinator
+npm install && npm run build
+cd ../../../../
 ```
 
-### 使用開始
+**使用開始**:
 
 ```bash
-# 通常通りClaude Codeを使用 - フックが自動的に調整
+# 通常通りClaude Codeを使用
 claude-code
 
-# 複数ターミナルで並行実行も可能
-# フックとMCPが自動的に調整を行う
+# プラグインが自動的に:
+# ✅ ファイルロックを管理
+# ✅ エージェントセッションを追跡
+# ✅ MCPツールを提供
+```
+
+詳細: [PLUGIN.md](./PLUGIN.md)
+
+---
+
+### 方法2: 手動セットアップ版
+
+**前提条件**:
+- Claude Code CLI
+- Python 3.9+ （フック用）
+- Node.js 18+ （MCPサーバー用）
+
+**セットアップ**:
+
+詳細な手順は [QUICKSTART.md](./QUICKSTART.md) を参照してください。
+
+**概要**:
+
+```bash
+# 1. プロジェクトルートで設定
+cd your-project
+
+# 2. ファイルをコピー
+mkdir -p .claude/hooks .claude/mcp-servers/swarm-coordinator
+cp path/to/examples/hooks/coordination.py .claude/hooks/
+cp path/to/examples/config/hooks.json .claude/hooks/
+cp -r path/to/examples/mcp-server/* .claude/mcp-servers/swarm-coordinator/
+
+# 3. MCPサーバービルド
+cd .claude/mcp-servers/swarm-coordinator
+npm install && npm run build
+cd ../../../
+
+# 4. 使用開始
+claude-code
 ```
 
 ## 技術詳細
