@@ -1,0 +1,131 @@
+name: Submodule-like External Library Usage
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+jobs:
+  use-external-library:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main repository
+        uses: actions/checkout@v4
+
+      - name: Checkout external library (example)
+        uses: actions/checkout@v4
+        with:
+          repository: actions/toolkit
+          path: external-libs/toolkit
+          ref: main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Verify external library
+        run: |
+          echo "=== Verifying External Library ==="
+          if [ -d external-libs/toolkit ]; then
+            echo "External library checked out successfully"
+            echo "Library structure:"
+            ls -la external-libs/toolkit/
+            echo ""
+            echo "Packages available:"
+            ls -la external-libs/toolkit/packages/ 2>/dev/null || echo "No packages directory"
+          fi
+
+      - name: Use external library in script
+        run: |
+          cat > test-script.sh << 'SCRIPT'
+          #!/bin/bash
+
+          # This script demonstrates using files from an external repository
+          echo "=== Using External Repository Resources ==="
+
+          TOOLKIT_PATH="external-libs/toolkit"
+
+          if [ -f "$TOOLKIT_PATH/README.md" ]; then
+            echo "External toolkit README exists"
+            echo "First 5 lines:"
+            head -n 5 "$TOOLKIT_PATH/README.md"
+          fi
+
+          # Count TypeScript files in the external library
+          if [ -d "$TOOLKIT_PATH" ]; then
+            TS_COUNT=$(find "$TOOLKIT_PATH" -name "*.ts" | wc -l)
+            echo ""
+            echo "TypeScript files in toolkit: $TS_COUNT"
+          fi
+
+          # List available packages
+          if [ -d "$TOOLKIT_PATH/packages" ]; then
+            echo ""
+            echo "Available packages:"
+            ls -1 "$TOOLKIT_PATH/packages/"
+          fi
+          SCRIPT
+
+          chmod +x test-script.sh
+          ./test-script.sh
+
+      - name: Checkout specific version/tag
+        uses: actions/checkout@v4
+        with:
+          repository: actions/checkout
+          path: versioned-repo
+          ref: v4.1.0  # Specific tag
+
+      - name: Verify specific version
+        run: |
+          echo "=== Checking out specific version ==="
+          if [ -f versioned-repo/package.json ]; then
+            echo "Version from package.json:"
+            cat versioned-repo/package.json | grep '"version"'
+          fi
+
+      - name: Create integration example
+        run: |
+          cat > integration-example.js << 'JAVASCRIPT'
+          // Example: Using external repository as a library
+
+          const fs = require('fs');
+          const path = require('path');
+
+          // Path to external library
+          const externalLibPath = path.join(__dirname, 'external-libs', 'toolkit');
+
+          console.log('=== Integration Example ===');
+          console.log('External library path:', externalLibPath);
+
+          // Check if external library exists
+          if (fs.existsSync(externalLibPath)) {
+            console.log('✓ External library is available');
+
+            // List packages
+            const packagesPath = path.join(externalLibPath, 'packages');
+            if (fs.existsSync(packagesPath)) {
+              const packages = fs.readdirSync(packagesPath);
+              console.log('\nAvailable packages:');
+              packages.forEach(pkg => console.log(`  - ${pkg}`));
+            }
+          } else {
+            console.log('✗ External library not found');
+          }
+          JAVASCRIPT
+
+          node integration-example.js
+
+      - name: Summary
+        run: |
+          echo "=== Summary ==="
+          echo "Successfully demonstrated:"
+          echo "1. Checking out external repository as library"
+          echo "2. Accessing files from external repository"
+          echo "3. Using specific version/tag"
+          echo "4. Integrating external code in scripts"
+          echo ""
+          echo "This approach allows using external repositories"
+          echo "similar to git submodules, but managed by GitHub Actions"

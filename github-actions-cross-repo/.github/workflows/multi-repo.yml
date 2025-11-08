@@ -1,0 +1,90 @@
+name: Multi Repository Integration
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+jobs:
+  multi-checkout:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main repository
+        uses: actions/checkout@v4
+        with:
+          path: main
+
+      - name: Checkout actions/checkout repository
+        uses: actions/checkout@v4
+        with:
+          repository: actions/checkout
+          path: checkout-repo
+
+      - name: Checkout actions/cache repository
+        uses: actions/checkout@v4
+        with:
+          repository: actions/cache
+          path: cache-repo
+
+      - name: Show all repository structures
+        run: |
+          echo "=== Main Repository ==="
+          ls -la main/ || echo "Main repo not found"
+          echo ""
+
+          echo "=== Actions Checkout Repository ==="
+          ls -la checkout-repo/
+          echo ""
+
+          echo "=== Actions Cache Repository ==="
+          ls -la cache-repo/
+          echo ""
+
+      - name: Compare action.yml files
+        run: |
+          echo "=== Comparing action metadata ==="
+
+          if [ -f checkout-repo/action.yml ]; then
+            echo "--- actions/checkout action.yml ---"
+            cat checkout-repo/action.yml | head -n 10
+            echo ""
+          fi
+
+          if [ -f cache-repo/action.yml ]; then
+            echo "--- actions/cache action.yml ---"
+            cat cache-repo/action.yml | head -n 10
+            echo ""
+          fi
+
+      - name: Collect information from multiple repos
+        run: |
+          echo "Repository Information Summary:"
+          echo "================================"
+
+          for repo in checkout-repo cache-repo; do
+            if [ -f "$repo/package.json" ]; then
+              echo "Repository: $repo"
+              echo "Name: $(cat $repo/package.json | grep '"name"' | head -1)"
+              echo "Version: $(cat $repo/package.json | grep '"version"' | head -1)"
+              echo "---"
+            fi
+          done
+
+      - name: Create combined output
+        run: |
+          mkdir -p combined-output
+
+          # Copy README files from all repos
+          cp main/README.md combined-output/main-readme.md 2>/dev/null || echo "No main README" > combined-output/main-readme.md
+          cp checkout-repo/README.md combined-output/checkout-readme.md 2>/dev/null || echo "No README"
+          cp cache-repo/README.md combined-output/cache-readme.md 2>/dev/null || echo "No README"
+
+          echo "Combined output created:"
+          ls -la combined-output/
+
+      - name: Upload combined artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: combined-repo-info
+          path: combined-output/

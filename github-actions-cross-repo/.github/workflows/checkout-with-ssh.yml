@@ -1,0 +1,190 @@
+name: Checkout with SSH Deploy Key
+
+# This workflow demonstrates using SSH deploy keys to checkout
+# private repositories - the most secure method
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+jobs:
+  # Method 1: Using webfactory/ssh-agent (Recommended)
+  checkout-with-ssh-agent:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main repository
+        uses: actions/checkout@v4
+        with:
+          path: main
+
+      # Setup SSH agent with deploy key
+      # NOTE: This requires DEPLOY_KEY secret to be configured
+      - name: Setup SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_KEY }}
+        continue-on-error: true
+        id: ssh_setup
+
+      # Checkout using SSH (actions/checkout with ssh-key)
+      - name: Checkout private repo with SSH
+        if: steps.ssh_setup.outcome == 'success'
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/private-repo
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
+          path: private-repo
+        continue-on-error: true
+
+      - name: Verify checkout
+        if: steps.ssh_setup.outcome == 'success'
+        run: |
+          if [ -d private-repo ]; then
+            echo "✓ Successfully checked out private repository via SSH"
+            ls -la private-repo/
+          else
+            echo "Setup instructions:"
+            echo "1. Generate SSH key: ssh-keygen -t ed25519 -f deploy_key -N ''"
+            echo "2. Add public key (deploy_key.pub) to target repo's Deploy Keys"
+            echo "3. Add private key (deploy_key) to this repo's DEPLOY_KEY secret"
+          fi
+
+  # Method 2: Manual SSH configuration
+  checkout-with-manual-ssh:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main repository
+        uses: actions/checkout@v4
+
+      # Configure SSH manually
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+
+          # Add GitHub to known hosts
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+          echo "SSH configuration completed"
+          echo "Note: This job requires DEPLOY_KEY_MANUAL secret"
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_KEY_MANUAL }}
+
+      # This step would work with actual deploy key
+      - name: Clone with SSH (example)
+        run: |
+          echo "Example command to clone with SSH:"
+          echo "git clone git@github.com:owner/private-repo.git"
+          echo ""
+          echo "With actual DEPLOY_KEY_MANUAL secret, you would run:"
+          echo "  echo \"\$SSH_KEY\" > ~/.ssh/id_ed25519"
+          echo "  chmod 600 ~/.ssh/id_ed25519"
+          echo "  git clone git@github.com:owner/private-repo.git"
+
+  # Method 3: Multiple repositories with multiple deploy keys
+  checkout-multiple-with-ssh:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup SSH agent with multiple keys
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: |
+            ${{ secrets.DEPLOY_KEY_REPO_A }}
+            ${{ secrets.DEPLOY_KEY_REPO_B }}
+            ${{ secrets.DEPLOY_KEY_REPO_C }}
+        continue-on-error: true
+        id: multi_ssh
+
+      - name: Show setup instructions
+        if: steps.multi_ssh.outcome != 'success'
+        run: |
+          echo "=== Setup Instructions for Multiple Deploy Keys ==="
+          echo ""
+          echo "For each repository you want to access:"
+          echo "1. Generate a unique SSH key pair:"
+          echo "   ssh-keygen -t ed25519 -C 'deploy-key-repo-a' -f deploy_key_a -N ''"
+          echo "   ssh-keygen -t ed25519 -C 'deploy-key-repo-b' -f deploy_key_b -N ''"
+          echo ""
+          echo "2. Add each public key to the respective repository:"
+          echo "   - Go to repo Settings → Deploy keys"
+          echo "   - Add deploy_key_a.pub to repo-a"
+          echo "   - Add deploy_key_b.pub to repo-b"
+          echo ""
+          echo "3. Add each private key as a secret:"
+          echo "   - DEPLOY_KEY_REPO_A: content of deploy_key_a"
+          echo "   - DEPLOY_KEY_REPO_B: content of deploy_key_b"
+          echo ""
+          echo "4. webfactory/ssh-agent will automatically match keys to repos"
+
+      - name: Example checkout with matched keys
+        if: steps.multi_ssh.outcome == 'success'
+        run: |
+          echo "With SSH agent configured, checkout action will:"
+          echo "- Automatically use the correct deploy key for each repository"
+          echo "- Based on the repository URL matching"
+          echo ""
+          echo "Example:"
+          echo "  - uses: actions/checkout@v4"
+          echo "    with:"
+          echo "      repository: owner/repo-a"
+          echo "      ssh-key: \${{ secrets.DEPLOY_KEY_REPO_A }}"
+
+  # Comparison: SSH vs PAT
+  comparison-demo:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Security Comparison
+        run: |
+          cat << 'EOF'
+          ╔════════════════════════════════════════════════════════════╗
+          ║         SSH Deploy Keys vs Personal Access Tokens          ║
+          ╠════════════════════════════════════════════════════════════╣
+          ║                                                            ║
+          ║ SSH Deploy Keys:                                           ║
+          ║   ✓ Repository-specific access                            ║
+          ║   ✓ Can be read-only or read-write                        ║
+          ║   ✓ Not tied to a user account                            ║
+          ║   ✓ Easy to revoke per repository                         ║
+          ║   ✓ Best practice for production                          ║
+          ║   ⚠ Requires separate key per repository                  ║
+          ║                                                            ║
+          ║ Personal Access Tokens:                                    ║
+          ║   ✓ Easy to set up                                        ║
+          ║   ✓ Can access multiple repositories                      ║
+          ║   ⚠ Tied to user account                                  ║
+          ║   ⚠ Broader access than typically needed                  ║
+          ║   ⚠ Classic PAT has access to all user repos              ║
+          ║                                                            ║
+          ║ Recommendation:                                            ║
+          ║   Production  → SSH Deploy Keys                           ║
+          ║   Development → Fine-grained PAT or SSH                   ║
+          ║   Testing     → Classic PAT (temporary)                   ║
+          ║                                                            ║
+          ╚════════════════════════════════════════════════════════════╝
+          EOF
+
+      - name: Setup Guide Summary
+        run: |
+          echo "Quick Setup for SSH Deploy Keys:"
+          echo "================================="
+          echo ""
+          echo "1. Generate key pair:"
+          echo "   ssh-keygen -t ed25519 -C 'github-actions' -f ~/.ssh/deploy_key -N ''"
+          echo ""
+          echo "2. Add public key to target repository:"
+          echo "   cat ~/.ssh/deploy_key.pub"
+          echo "   → Copy and add to: Settings → Deploy keys → Add deploy key"
+          echo ""
+          echo "3. Add private key to workflow repository:"
+          echo "   cat ~/.ssh/deploy_key"
+          echo "   → Copy and add to: Settings → Secrets → New secret"
+          echo "   → Name: DEPLOY_KEY"
+          echo ""
+          echo "4. Use in workflow:"
+          echo "   - uses: webfactory/ssh-agent@v0.9.0"
+          echo "     with:"
+          echo "       ssh-private-key: \${{ secrets.DEPLOY_KEY }}"

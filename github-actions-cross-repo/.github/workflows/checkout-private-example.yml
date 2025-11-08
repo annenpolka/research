@@ -1,0 +1,122 @@
+name: Checkout Private Repository (Example Template)
+
+# NOTE: This is a template workflow for checking out private repositories.
+# To use this workflow:
+# 1. Create a Personal Access Token (PAT) with 'repo' scope
+# 2. Add it to repository secrets as 'GH_PAT'
+# 3. Replace 'my-org/my-private-repo' with your actual repository
+
+on:
+  workflow_dispatch:
+    inputs:
+      private_repo:
+        description: 'Private repository to checkout (owner/repo)'
+        required: false
+        default: 'my-org/my-private-repo'
+
+jobs:
+  checkout-private:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main repository
+        uses: actions/checkout@v4
+        with:
+          path: main
+
+      # This step requires GH_PAT secret to be configured
+      - name: Checkout private repository
+        uses: actions/checkout@v4
+        with:
+          # Replace with actual private repository
+          repository: ${{ github.event.inputs.private_repo || 'my-org/my-private-repo' }}
+          # Use Personal Access Token from secrets
+          token: ${{ secrets.GH_PAT }}
+          path: private-repo
+        # This step will fail if GH_PAT is not configured
+        continue-on-error: true
+        id: checkout_private
+
+      - name: Verify checkout result
+        run: |
+          if [ "${{ steps.checkout_private.outcome }}" == "success" ]; then
+            echo "✓ Successfully checked out private repository"
+            ls -la private-repo/
+          else
+            echo "✗ Failed to checkout private repository"
+            echo ""
+            echo "To use this workflow:"
+            echo "1. Go to GitHub Settings → Developer settings → Personal access tokens"
+            echo "2. Generate new token with 'repo' scope"
+            echo "3. Go to this repository's Settings → Secrets → Actions"
+            echo "4. Add new secret named 'GH_PAT' with the token value"
+            echo "5. Update the 'repository' field with your private repo"
+          fi
+
+      - name: Use private repository files
+        if: steps.checkout_private.outcome == 'success'
+        run: |
+          echo "=== Private Repository Contents ==="
+          ls -la private-repo/
+
+          # Example: Using configuration from private repo
+          if [ -f private-repo/config.yml ]; then
+            echo "Found configuration file"
+            cat private-repo/config.yml
+          fi
+
+      - name: Checkout private repo with specific ref
+        if: steps.checkout_private.outcome == 'success'
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.inputs.private_repo || 'my-org/my-private-repo' }}
+          token: ${{ secrets.GH_PAT }}
+          ref: develop  # or tag name, commit hash
+          path: private-repo-develop
+        continue-on-error: true
+
+  # Example: Organization internal repository
+  checkout-internal:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout internal repository (same organization)
+        uses: actions/checkout@v4
+        with:
+          # For repositories in the same organization
+          repository: ${{ github.repository_owner }}/internal-tools
+          token: ${{ secrets.GH_PAT }}
+          path: internal-tools
+        continue-on-error: true
+        id: checkout_internal
+
+      - name: Show internal tools
+        if: steps.checkout_internal.outcome == 'success'
+        run: |
+          echo "=== Internal Tools Repository ==="
+          ls -la internal-tools/
+
+  # Example: Using GitHub App token (more secure alternative to PAT)
+  checkout-with-app-token:
+    runs-on: ubuntu-latest
+
+    steps:
+      # This example shows how to use GitHub App authentication
+      # which is more secure and recommended for production use
+
+      - name: Generate token with GitHub App
+        id: generate_token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          # repositories: my-private-repo  # Optional: specify repositories
+        continue-on-error: true
+
+      - name: Checkout with app token
+        if: steps.generate_token.outcome == 'success'
+        uses: actions/checkout@v4
+        with:
+          repository: my-org/my-private-repo
+          token: ${{ steps.generate_token.outputs.token }}
+          path: app-authenticated-repo

@@ -1,0 +1,47 @@
+name: Checkout Public Repository
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+jobs:
+  checkout-public:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+        with:
+          path: main-repo
+
+      - name: Checkout a public repository
+        uses: actions/checkout@v4
+        with:
+          repository: actions/toolkit
+          path: actions-toolkit
+
+      - name: List files in both repositories
+        run: |
+          echo "=== Main Repository Files ==="
+          ls -la main-repo/
+          echo ""
+          echo "=== Actions Toolkit Repository Files ==="
+          ls -la actions-toolkit/
+          echo ""
+          echo "=== Actions Toolkit README.md Preview ==="
+          head -n 20 actions-toolkit/README.md
+
+      - name: Use files from external repository
+        run: |
+          echo "Checking package.json from actions/toolkit"
+          if [ -f actions-toolkit/package.json ]; then
+            echo "Found package.json, showing packages:"
+            cat actions-toolkit/package.json | grep '"name"' | head -5
+          fi
+
+      - name: Verify directory structure
+        run: |
+          echo "Current working directory: $(pwd)"
+          echo "Directory structure:"
+          tree -L 2 -a || find . -maxdepth 2 -type d
