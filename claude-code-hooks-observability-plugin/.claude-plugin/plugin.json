@@ -1,0 +1,32 @@
+{
+  "name": "multi-agent-observability",
+  "version": "1.0.0",
+  "description": "Real-time monitoring and visualization for Claude Code agents through comprehensive hook event tracking",
+  "displayName": "Multi-Agent Observability",
+  "author": {
+    "name": "Research Team",
+    "email": "research@example.com"
+  },
+  "homepage": "https://github.com/research/multi-agent-observability",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/research/multi-agent-observability"
+  },
+  "license": "MIT",
+  "keywords": [
+    "observability",
+    "monitoring",
+    "hooks",
+    "multi-agent",
+    "debugging",
+    "visualization"
+  ],
+  "engines": {
+    "claude-code": ">=1.0.0"
+  },
+  "dependencies": {
+    "python": ">=3.8",
+    "uv": "*",
+    "bun": ">=1.0.0"
+  }
+}

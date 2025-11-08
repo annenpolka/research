@@ -1,0 +1,94 @@
+{
+  "PreToolUse": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "uv run ${CLAUDE_PLUGIN_ROOT}/hooks/send_event.py --source-app ${CLAUDE_PROJECT_NAME:-unknown} --event-type PreToolUse --summarize"
+        }
+      ]
+    }
+  ],
+  "PostToolUse": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "uv run ${CLAUDE_PLUGIN_ROOT}/hooks/send_event.py --source-app ${CLAUDE_PROJECT_NAME:-unknown} --event-type PostToolUse --summarize"
+        }
+      ]
+    }
+  ],
+  "Notification": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "uv run ${CLAUDE_PLUGIN_ROOT}/hooks/send_event.py --source-app ${CLAUDE_PROJECT_NAME:-unknown} --event-type Notification --summarize"
+        }
+      ]
+    }
+  ],
+  "Stop": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "uv run ${CLAUDE_PLUGIN_ROOT}/hooks/send_event.py --source-app ${CLAUDE_PROJECT_NAME:-unknown} --event-type Stop --add-chat"
+        }
+      ]
+    }
+  ],
+  "SubagentStop": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "uv run ${CLAUDE_PLUGIN_ROOT}/hooks/send_event.py --source-app ${CLAUDE_PROJECT_NAME:-unknown} --event-type SubagentStop"
+        }
+      ]
+    }
+  ],
+  "PreCompact": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "uv run ${CLAUDE_PLUGIN_ROOT}/hooks/send_event.py --source-app ${CLAUDE_PROJECT_NAME:-unknown} --event-type PreCompact"
+        }
+      ]
+    }
+  ],
+  "UserPromptSubmit": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "uv run ${CLAUDE_PLUGIN_ROOT}/hooks/send_event.py --source-app ${CLAUDE_PROJECT_NAME:-unknown} --event-type UserPromptSubmit --summarize"
+        }
+      ]
+    }
+  ],
+  "SessionStart": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "uv run ${CLAUDE_PLUGIN_ROOT}/hooks/send_event.py --source-app ${CLAUDE_PROJECT_NAME:-unknown} --event-type SessionStart"
+        }
+      ]
+    }
+  ],
+  "SessionEnd": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "uv run ${CLAUDE_PLUGIN_ROOT}/hooks/send_event.py --source-app ${CLAUDE_PROJECT_NAME:-unknown} --event-type SessionEnd"
+        }
+      ]
+    }
+  ]
+}
