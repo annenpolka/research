@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "observability": {
+      "command": "python3",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/mcp-server/server.py"],
+      "transport": "stdio",
+      "env": {
+        "DB_PATH": "./events.db"
+      }
+    }
+  }
+}
