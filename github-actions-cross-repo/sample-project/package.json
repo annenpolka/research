@@ -1,0 +1,18 @@
+{
+  "name": "github-actions-cross-repo-sample",
+  "version": "1.0.0",
+  "description": "Sample project demonstrating cross-repository usage in GitHub Actions",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "test": "echo \"No tests configured\" && exit 0"
+  },
+  "keywords": [
+    "github-actions",
+    "cross-repo",
+    "multi-repo",
+    "integration"
+  ],
+  "author": "AI Research",
+  "license": "MIT"
+}
