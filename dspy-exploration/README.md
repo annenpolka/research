@@ -12,17 +12,28 @@ DSPy（Declarative Self-improving Language Programs）は、言語モデルの�
 
 ## 実装した課題
 
+### 基本機能（タスク1-4）
 1. **テキスト分類** (`task1_classification.py`): 感情分析タスク
 2. **質問応答** (`task2_qa.py`): コンテキストベースのQAシステム
 3. **Chain-of-Thought推論** (`task3_cot.py`): 数学問題解決
 4. **最適化機能** (`task4_optimization.py`): DSPyの自動最適化デモ
-5. **シンプルデモ** (`demo_simple.py`): DSPyの基本構造の解説
+
+### Claude統合（タスク5-7）
+5. **Claude統合** (`task5_claude_integration.py`): Anthropic Claude + DSPyの統合
+6. **MCP統合** (`task6_mcp_integration.py`): Model Context Protocolとの連携
+7. **実用パターン** (`task7_practical_patterns.py`): 5つの実用的な設計パターン
+
+### デモ
+- **基本デモ** (`demo_simple.py`): DSPyの基本構造の解説
+- **Claude完全デモ** (`demo_claude_complete.py`): Claude Sonnet 4との統合デモ
 
 ## 環境
 
 - Python 3.x
 - DSPy (`dspy-ai`)
-- OpenAI API（オプション、実際のLM実行に必要）
+- LMプロバイダー（以下のいずれか）:
+  - OpenAI API（オプション）
+  - Anthropic API（推奨、Claude統合向け）
 
 ## 使い方
 
@@ -43,6 +54,7 @@ python demo_simple.py
 
 実際のLMを使用する場合は、環境変数を設定してください：
 
+#### OpenAIを使用する場合:
 ```bash
 export OPENAI_API_KEY='your-api-key'
 
@@ -51,6 +63,29 @@ python task1_classification.py  # テキスト分類
 python task2_qa.py              # 質問応答
 python task3_cot.py             # Chain-of-Thought推論
 python task4_optimization.py    # 最適化機能
+```
+
+#### Anthropic Claude を使用する場合（推奨）:
+```bash
+export ANTHROPIC_API_KEY='your-api-key'
+
+# Claude統合のデモ
+python task5_claude_integration.py  # Claude統合の基本
+python demo_claude_complete.py      # 完全な実装例
+
+# 基本タスクもClaudeで実行可能（コードを少し修正）
+python task1_classification.py
+python task2_qa.py
+python task3_cot.py
+```
+
+#### MCPとの統合:
+```bash
+# MCP統合の概要を確認
+python task6_mcp_integration.py
+
+# 実用的なパターンを学ぶ
+python task7_practical_patterns.py
 ```
 
 ## 結果
@@ -122,6 +157,78 @@ optimized_model = optimizer.compile(model, trainset=trainset)
 - **手法**: `BootstrapFewShot` などの最適化手法
 - **学び**: プロンプト最適化の自動化
 
+#### Task 5: Claude統合
+- **目的**: Anthropic ClaudeとDSPyの統合方法
+- **手法**: `dspy.LM('anthropic/claude-sonnet-4...')` による設定
+- **学び**:
+  - 複数のClaudeモデル（Sonnet 4, Opus, Haiku）の使い分け
+  - 長いコンテキスト（200K+トークン）の活用
+  - 教師-生徒モデルパターンでのコスト最適化
+
+#### Task 6: MCP統合
+- **目的**: Model Context ProtocolとDSPyの連携
+- **手法**: ReActエージェント + MCPツール
+- **学び**:
+  - Claude Desktop互換の設定
+  - 標準化されたツール接続
+  - ファイルシステム、DB、Gitなどとの統合
+
+#### Task 7: 実用パターン
+- **目的**: プロダクション環境での設計パターン
+- **手法**: 5つの実用的アーキテクチャ
+- **学び**:
+  - RAGシステム
+  - マルチエージェントシステム
+  - Self-Improvingシステム
+  - ツール統合エージェント
+  - ハイブリッドシステム
+
+## DSPy + Claude統合の主要な発見
+
+### 技術スタック
+```
+┌──────────────────┐
+│  Claude Code SDK │  ← ユーザーインターフェース
+└────────┬─────────┘
+         │
+┌────────▼─────────┐
+│  DSPy Framework  │  ← プログラム的LM制御、最適化
+└────────┬─────────┘
+         │
+┌────────▼─────────┐
+│  Claude Models   │  ← 高品質な推論エンジン
+│  (Sonnet 4/Opus) │
+└────────┬─────────┘
+         │
+┌────────▼─────────┐
+│  MCP Protocol    │  ← ツール統合レイヤー
+└──────────────────┘
+```
+
+### Claudeモデルの使い分け戦略
+
+| タスク | 推奨モデル | 理由 |
+|--------|-----------|------|
+| 複雑な推論・分析 | Claude Sonnet 4 | 最高の性能、最新機能 |
+| 重要な意思決定 | Claude Opus 3.5 | 深い推論能力 |
+| バランス型 | Claude Sonnet 3.5 | コストと性能のバランス |
+| 高速処理・分類 | Claude Haiku 3 | 高速・低コスト |
+
+### 最適化パターン
+
+```python
+# パターン1: 教師-生徒モデル
+teacher = dspy.LM('anthropic/claude-sonnet-4-20250514')  # 高性能
+student = dspy.LM('anthropic/claude-3-haiku-20240307')   # 低コスト
+
+# パターン2: タスク別モデル選択
+with dspy.context(lm=claude_sonnet4):
+    complex_result = complex_reasoning(hard_problem)
+
+with dspy.context(lm=claude_haiku):
+    simple_result = simple_classification(easy_task)
+```
+
 ## 結論
 
 ### DSPyが解決する問題
@@ -137,6 +244,15 @@ DSPyのアプローチ：
 - ✅ 自動最適化でプロンプトを改善
 - ✅ 型安全性によりエラーを早期発見
 - ✅ モジュール性により保守が容易
+
+### DSPy + Claudeの組み合わせの特別な利点
+
+1. **長いコンテキスト**: Claudeの200K+トークンをDSPyで効率的に活用
+2. **優れた推論**: ClaudeのCoT能力をDSPyのChainOfThoughtで最大化
+3. **柔軟なモデル選択**: タスクに応じてSonnet 4/Opus/Haikuを使い分け
+4. **コスト最適化**: 教師-生徒パターンで高品質・低コストを両立
+5. **MCP統合**: Claude DesktopとDSPyエージェントの seamlessな連携
+6. **多言語対応**: Claudeの日本語能力をDSPyで構造化
 
 ### 適用分野
 
@@ -164,6 +280,24 @@ DSPyは以下のタスクに特に有効：
 
 ## 参考資料
 
+### DSPy関連
 - [DSPy GitHub](https://github.com/stanfordnlp/dspy)
-- [DSPy Documentation](https://dspy-docs.vercel.app/)
+- [DSPy Documentation](https://dspy.ai/)
+- [DSPy Language Models Guide](https://dspy.ai/learn/programming/language_models/)
 - DSPy論文: "DSPy: Compiling Declarative Language Model Calls into Self-Improving Pipelines"
+
+### Anthropic Claude関連
+- [Anthropic API Documentation](https://docs.anthropic.com/)
+- [Claude Models Overview](https://docs.anthropic.com/en/docs/models-overview)
+- [Claude API Pricing](https://www.anthropic.com/pricing)
+
+### Model Context Protocol (MCP)
+- [MCP Documentation](https://docs.claude.com/en/docs/mcp)
+- [MCP Servers GitHub](https://github.com/modelcontextprotocol/servers)
+- [DSPy + MCP Integration Example](https://github.com/ThanabordeeN/dspy-mcp-intregration)
+- [How to build AI Agents with MCP](https://clickhouse.com/blog/how-to-build-ai-agents-mcp-12-frameworks)
+
+### 実装例とチュートリアル
+- [DSPy + MCP: From Brittle Prompts to Bulletproof AI Tools](https://medium.com/@richardhightower/dspy-meets-mcp-from-brittle-prompts-to-bulletproof-ai-tools-f3217698567d)
+- [Programming, Not Prompting: A Hands-on Guide to DSPy](https://miptgirl.medium.com/programming-not-prompting-a-hands-on-guide-to-dspy-04ea2d966e6d)
+- [DSPy + GEPA: 0→1 Builder's Guide](https://www.versalist.com/guides/dspy-start-programming-llms)
