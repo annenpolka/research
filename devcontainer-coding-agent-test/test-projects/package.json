@@ -1,0 +1,24 @@
+{
+  "name": "coding-agent-test-project",
+  "version": "1.0.0",
+  "description": "Test project for validating coding agent functionality in devcontainers",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "test:agent": "node agent-test-runner.js"
+  },
+  "keywords": [
+    "testing",
+    "coding-agent",
+    "devcontainer"
+  ],
+  "author": "Coding Agent Research",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^8.50.0",
+    "prettier": "^3.0.3",
+    "jest": "^29.7.0"
+  }
+}

@@ -1,0 +1,1 @@
+Devcontainer環境でClaude CodeなどのAIコーディングエージェントを動作検証するテストプロジェクト
