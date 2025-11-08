@@ -7,37 +7,28 @@
 ### **v2: Skills版** (最新・推奨)
 
 ```bash
-# たった1コマンド - ビルド不要！
-claude-code plugin install swarm-coordinator
+# Step 1: Claude Codeを起動
+claude
+```
 
-# 即座に使用開始
-claude-code
+**Claude内で実行:**
+```
+/plugin marketplace add https://raw.githubusercontent.com/annenpolka/research/main/multi-agent-coordinator/plugin-v2/.claude-plugin/marketplace.json
+/plugin install swarm-coordinator
 ```
 
 **特徴:**
 - ✅ ビルド不要（npm install不要）
 - ✅ Python のみ（Node.js不要）
-- ✅ インストール時間: **5秒**
+- ✅ セットアップ時間: **30秒**
 
-詳細: [plugin-v2/README.md](./plugin-v2/README.md)
+詳細: [plugin-v2/INSTALL.md](./plugin-v2/INSTALL.md) | [正しいインストール方法](./CORRECT_INSTALLATION.md)
 
 ---
 
 ### v1: MCP版（レガシー）
 
-```bash
-# インストール
-claude-code plugin install swarm-coordinator@v1
-
-# ビルドが必要
-cd .claude/plugins/swarm-coordinator/mcp-servers/swarm-coordinator
-npm install && npm run build
-```
-
-**特徴:**
-- ✅ 明示的なツールAPI
-- ❌ Node.js + ビルドステップ必要
-- ❌ インストール時間: 2分
+v1はビルドステップが必要なため非推奨です。v2を使用してください。
 
 詳細: [PLUGIN.md](./PLUGIN.md)
 

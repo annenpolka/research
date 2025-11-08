@@ -14,13 +14,19 @@
 ## Quick Start
 
 ```bash
-# Install plugin
-claude-code plugin install swarm-coordinator
-
-# That's it! No build step needed.
-# Start using immediately:
-claude-code
+# Start Claude Code
+claude
 ```
+
+**In Claude:**
+```
+/plugin marketplace add https://raw.githubusercontent.com/annenpolka/research/main/multi-agent-coordinator/plugin-v2/.claude-plugin/marketplace.json
+/plugin install swarm-coordinator
+```
+
+That's it! No build step needed.
+
+See [INSTALL.md](./INSTALL.md) for detailed instructions.
 
 ## How It Works
 
@@ -128,17 +134,14 @@ See parent directory for detailed documentation:
 
 ## Migration from v1
 
-If you're using v1 (MCP version):
+If you're using v1 (MCP version), uninstall it first:
 
-```bash
-# Uninstall v1
-claude-code plugin uninstall swarm-coordinator
-
-# Install v2
-claude-code plugin install swarm-coordinator@latest
-
-# Done! No build step needed.
+**In Claude:**
 ```
+/plugin uninstall swarm-coordinator
+```
+
+Then install v2 following the Quick Start instructions above.
 
 Data format is identical - your existing `.claude/swarm/` data works unchanged.
 
