@@ -2,18 +2,30 @@
 
 ## 概要
 
-このガイドでは、vibe-kanbanコンテナからリモートサーバーやGitリポジトリにSSH接続する方法を説明します。
+このガイドでは、vibe-kanbanでのSSH接続について2つの用途を説明します：
+
+1. **コンテナからのSSH接続** - GitリポジトリやリモートサーバーへのSSH接続
+2. **エディタ統合でのSSH接続** - ローカルVSCodeからリモートサーバー上のプロジェクトへの接続
 
 ## SSH接続が必要な場面
 
 vibe-kanbanで以下の操作を行う際にSSH接続が必要になります：
+
+### 1. コンテナからのSSH接続
 
 - **リモートGitリポジトリへのアクセス** (git@github.com:user/repo.git)
 - **リモートサーバーへのデプロイ**
 - **SSH経由でのファイル転送** (scp, rsync)
 - **コンテナ内からのリモートサーバー操作**
 
-## 方法の比較
+### 2. エディタ統合でのSSH接続
+
+- **VSCode Remote-SSH** - ローカルVSCodeでリモートサーバー上のプロジェクトを編集
+- **リモート開発環境** - vibe-kanbanがリモートVPS/クラウドインスタンスで動作している場合
+
+## 方法の比較（コンテナからのSSH接続）
+
+**注**: この比較表は「コンテナからのSSH接続」用です。エディタ統合については[こちら](#エディタ統合でのリモートssh接続)を参照してください。
 
 | 方法 | セキュリティ | 設定の簡単さ | 推奨度 | 用途 |
 |------|--------------|--------------|--------|------|
@@ -405,6 +417,243 @@ ssh-add ~/.ssh/id_rsa_bitbucket
 
 ---
 
+## エディタ統合でのリモートSSH接続
+
+vibe-kanbanはVSCode Remote-SSHとの統合をサポートしており、リモートサーバー上で動作するvibe-kanbanのプロジェクトをローカルのVSCodeで編集できます。
+
+### ユースケース
+
+この機能は以下の場合に便利です：
+
+- **リモートVPSでvibe-kanbanを実行** - クラウド上のサーバーでvibe-kanbanを動かし、ローカルから編集
+- **強力なリモートマシンを使用** - GPU搭載サーバーなど、ローカルより高性能な環境で開発
+- **チーム開発** - 共有サーバー上のプロジェクトを複数人で編集
+
+### 前提条件
+
+#### 1. ホストマシン（ローカルPC）
+
+```bash
+# VSCode Remote-SSH拡張機能をインストール
+# VSCodeで: Ctrl+Shift+X → "Remote - SSH" を検索してインストール
+```
+
+#### 2. リモートサーバー
+
+```bash
+# SSHサーバーが起動していることを確認
+sudo systemctl status sshd
+
+# vibe-kanbanが起動していること
+docker ps | grep vibe-kanban
+```
+
+#### 3. SSH鍵の設定
+
+```bash
+# ローカルPCからリモートサーバーへのSSH接続を設定
+
+# 1. SSH鍵を生成（まだない場合）
+ssh-keygen -t ed25519 -C "your_email@example.com"
+
+# 2. 公開鍵をリモートサーバーにコピー
+ssh-copy-id user@remote-server.com
+
+# 3. 接続テスト
+ssh user@remote-server.com
+```
+
+### vibe-kanbanでの設定
+
+#### ステップ1: Global Settingsを開く
+
+1. vibe-kanban UIで、サイドバーの⚙️アイコンをクリック
+2. または、右上のメニューから「Settings」を選択
+
+#### ステップ2: Remote SSH設定を入力
+
+**Remote SSH Host**:
+- サーバーのホスト名またはIPアドレスを入力
+- 例: `example.com`, `192.168.1.100`, `my-vps.cloud.com`
+
+**Remote SSH User**:
+- SSH接続に使用するユーザー名を入力
+- 例: `ubuntu`, `user`, `root`
+
+**設定例**:
+```
+Remote SSH Host: vps.example.com
+Remote SSH User: ubuntu
+```
+
+#### ステップ3: プロジェクトをVSCodeで開く
+
+1. vibe-kanban UIでプロジェクトを選択
+2. "Open in VSCode"ボタンをクリック
+3. VSCodeが自動的に起動し、以下のようなURLを使用してリモート接続：
+   ```
+   vscode://vscode-remote/ssh-remote+ubuntu@vps.example.com/repos/my-project
+   ```
+
+### トラブルシューティング（エディタ統合）
+
+#### 問題1: VSCodeが起動しない
+
+**症状**: "Open in VSCode"をクリックしても何も起こらない
+
+**解決策**:
+
+```bash
+# 1. VSCodeがインストールされているか確認
+code --version
+
+# 2. Remote-SSH拡張機能がインストールされているか確認
+# VSCodeで: Ctrl+Shift+X → "Remote - SSH"
+
+# 3. プロトコルハンドラーが登録されているか確認（Linux）
+xdg-mime query default x-scheme-handler/vscode
+```
+
+#### 問題2: SSH接続が失敗する
+
+**症状**: VSCodeがリモートサーバーに接続できない
+
+**解決策**:
+
+```bash
+# 1. SSHの設定を確認
+cat ~/.ssh/config
+
+# 2. Host設定を追加
+cat >> ~/.ssh/config <<EOF
+Host vps.example.com
+    HostName vps.example.com
+    User ubuntu
+    IdentityFile ~/.ssh/id_ed25519
+    ForwardAgent yes
+EOF
+
+# 3. 接続テスト
+ssh ubuntu@vps.example.com
+```
+
+#### 問題3: プロジェクトパスが見つからない
+
+**症状**: VSCodeで"Folder does not exist"エラー
+
+**原因**: vibe-kanbanのGlobal Settingsで設定したホスト/ユーザーと、実際のリモートサーバーのパスが一致していない
+
+**解決策**:
+
+```bash
+# リモートサーバーで、vibe-kanbanコンテナのマウントパスを確認
+docker inspect vibe-kanban | grep -A 5 Mounts
+
+# 例: /repos/my-project が正しいパスか確認
+docker exec vibe-kanban ls -la /repos/
+```
+
+### SSH設定の例
+
+#### 例1: 標準的なVPS設定
+
+**~/.ssh/config**:
+```
+Host my-vps
+    HostName 203.0.113.42
+    User ubuntu
+    Port 22
+    IdentityFile ~/.ssh/id_ed25519
+    ForwardAgent yes
+```
+
+**vibe-kanban Global Settings**:
+```
+Remote SSH Host: my-vps
+Remote SSH User: ubuntu
+```
+
+#### 例2: カスタムポートとジャンプホスト
+
+**~/.ssh/config**:
+```
+Host jumphost
+    HostName bastion.example.com
+    User admin
+    IdentityFile ~/.ssh/id_rsa
+
+Host internal-server
+    HostName 10.0.1.100
+    User developer
+    Port 2222
+    IdentityFile ~/.ssh/id_ed25519
+    ProxyJump jumphost
+```
+
+**vibe-kanban Global Settings**:
+```
+Remote SSH Host: internal-server
+Remote SSH User: developer
+```
+
+#### 例3: 複数の環境
+
+**~/.ssh/config**:
+```
+Host dev-vibe
+    HostName dev.vibe.example.com
+    User devuser
+    IdentityFile ~/.ssh/id_dev
+
+Host staging-vibe
+    HostName staging.vibe.example.com
+    User staginguser
+    IdentityFile ~/.ssh/id_staging
+
+Host prod-vibe
+    HostName prod.vibe.example.com
+    User produser
+    IdentityFile ~/.ssh/id_prod
+```
+
+開発環境、ステージング環境、本番環境ごとにvibe-kanbanの設定を切り替えます。
+
+### セキュリティ上の注意
+
+#### Remote SSH接続のベストプラクティス
+
+1. **専用SSH鍵を使用**
+   ```bash
+   # vibe-kanban専用の鍵を作成
+   ssh-keygen -t ed25519 -C "vibe-kanban-remote" -f ~/.ssh/id_vibe_remote
+   ```
+
+2. **SSH設定でセキュリティを強化**
+   ```
+   Host vibe-remote
+       HostName vps.example.com
+       User ubuntu
+       IdentityFile ~/.ssh/id_vibe_remote
+       IdentitiesOnly yes
+       ForwardAgent no  # 不要な場合は無効化
+       StrictHostKeyChecking yes
+   ```
+
+3. **ファイアウォールでSSHポートを保護**
+   ```bash
+   # 特定のIPからのみSSH接続を許可
+   sudo ufw allow from 203.0.113.0/24 to any port 22
+   ```
+
+4. **SSH鍵ベースの認証のみ許可**
+   ```bash
+   # /etc/ssh/sshd_config
+   PasswordAuthentication no
+   PubkeyAuthentication yes
+   ```
+
+---
+
 ## セキュリティベストプラクティス
 
 ### 1. SSH鍵の管理
@@ -497,11 +746,30 @@ eval $(ssh-agent -s) > /dev/null
 ssh-add ~/.ssh/id_rsa 2>/dev/null
 ```
 
+### Q5: エディタ統合でのSSH接続とコンテナからのSSH接続の違いは？
+
+**A**:
+
+| 項目 | コンテナからのSSH接続 | エディタ統合でのSSH接続 |
+|------|---------------------|----------------------|
+| **目的** | Gitリポジトリやリモートサーバーへのアクセス | ローカルVSCodeでリモートプロジェクトを編集 |
+| **接続元** | vibe-kanbanコンテナ内 | ローカルPC上のVSCode |
+| **接続先** | GitHub/GitLab/リモートサーバー | vibe-kanbanが動作するリモートサーバー |
+| **設定場所** | Docker run/compose設定 | vibe-kanban Global Settings |
+| **使用例** | `git clone git@github.com:user/repo.git` | "Open in VSCode"ボタンでリモート編集 |
+
+**具体例**:
+
+- **コンテナからのSSH接続**: vibe-kanbanコンテナ → GitHub (Gitリポジトリのpush/pull)
+- **エディタ統合SSH接続**: ローカルVSCode → リモートVPSのvibe-kanban (ファイル編集)
+
 ---
 
 ## まとめ
 
-### 推奨設定（開発環境）
+### コンテナからのSSH接続（推奨設定）
+
+#### 開発環境
 
 ```bash
 # 1. SSHエージェントのセットアップ
@@ -515,21 +783,63 @@ ssh-add ~/.ssh/id_rsa
 docker exec vibe-kanban ssh -T git@github.com
 ```
 
-### 推奨設定（本番環境）
+#### 本番環境
 
 - Docker Swarm SecretsまたはKubernetes Secretsを使用
 - SSHエージェントフォワーディングのみ
 - 読み取り専用マウント
 - 詳細は **[CREDENTIALS.md](CREDENTIALS.md)** を参照
 
+### エディタ統合でのSSH接続（推奨設定）
+
+#### ローカルPCでの準備
+
+```bash
+# 1. VSCode Remote-SSH拡張機能をインストール
+# VSCodeで: Ctrl+Shift+X → "Remote - SSH"
+
+# 2. SSH鍵の設定
+ssh-keygen -t ed25519 -C "your_email@example.com"
+ssh-copy-id user@remote-server.com
+
+# 3. ~/.ssh/config に設定を追加
+cat >> ~/.ssh/config <<EOF
+Host my-vps
+    HostName vps.example.com
+    User ubuntu
+    IdentityFile ~/.ssh/id_ed25519
+    ForwardAgent yes
+EOF
+```
+
+#### vibe-kanban設定
+
+1. vibe-kanban UIで⚙️Settings を開く
+2. Remote SSH設定を入力:
+   - **Remote SSH Host**: `my-vps` (または `vps.example.com`)
+   - **Remote SSH User**: `ubuntu`
+3. プロジェクトで"Open in VSCode"をクリック
+
+### 2つのSSH接続の使い分け
+
+- **コンテナからのSSH接続**: Gitリポジトリへのpush/pull、デプロイ操作に使用
+- **エディタ統合SSH接続**: リモートサーバー上のvibe-kanbanプロジェクトをローカルVSCodeで編集
+
 ---
 
 ## 関連ドキュメント
+
+### このプロジェクトのドキュメント
 
 - **[CREDENTIALS.md](CREDENTIALS.md)** - 認証情報の包括的な管理ガイド
 - **[QUICKSTART.md](QUICKSTART.md)** - 5分で始めるクイックスタート
 - **[PROJECT_MANAGEMENT.md](PROJECT_MANAGEMENT.md)** - プロジェクト管理の詳細
 - **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - トラブルシューティング
+
+### vibe-kanban公式ドキュメント
+
+- **[Global Settings](https://www.vibekanban.com/docs/configuration-customisation/global-settings)** - Remote SSH設定を含むグローバル設定
+- **[vibe-kanban Documentation](https://vibekanban.com/docs)** - 公式ドキュメントトップページ
 
 ---
 
