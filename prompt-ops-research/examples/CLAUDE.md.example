@@ -1,0 +1,108 @@
+# プロジェクト設定例: CLAUDE.md
+
+このファイルをプロジェクトルートに配置すると、Claude Codeは自動的にこのコンテキストを読み込みます。
+
+---
+
+## 技術スタック
+
+IMPORTANT: このプロジェクトはTypeScript + React + Next.js 14を使用しています
+IMPORTANT: スタイリングはTailwind CSSを使用してください
+IMPORTANT: 状態管理はZustandを使用してください
+
+## コーディング規約
+
+IMPORTANT: すべてのコンポーネントはfunctional componentで記述してください
+IMPORTANT: Propsの型定義は必ずinterfaceを使用してください
+IMPORTANT: exportはnamed exportを優先してください（default exportは避ける）
+
+## ディレクトリ構造
+
+```
+src/
+├── components/     # Reactコンポーネント（ファイル名はPascalCase）
+├── hooks/          # カスタムフック（ファイル名はuse*.ts）
+├── lib/            # ユーティリティ関数
+├── stores/         # Zustand stores
+├── types/          # TypeScript型定義
+└── app/            # Next.js App Router pages
+```
+
+## テスト
+
+IMPORTANT: すべての新しいコンポーネントには対応するテストファイルを作成してください
+IMPORTANT: テストはJest + React Testing Libraryで実装してください
+IMPORTANT: テスト実行コマンド: `npm test`
+IMPORTANT: カバレッジ確認: `npm run test:coverage`
+
+## Git / コミット
+
+IMPORTANT: コミットメッセージはConventional Commits形式に従ってください
+- feat: 新機能
+- fix: バグ修正
+- docs: ドキュメント変更
+- style: コードフォーマット
+- refactor: リファクタリング
+- test: テスト追加・修正
+- chore: ビルドプロセス、補助ツール変更
+
+例: `feat: ユーザー認証機能を追加`
+
+## コードレビュー基準
+
+IMPORTANT: プルリクエストを作成する前に以下を確認:
+1. `npm run lint` が通ること
+2. `npm test` がすべて成功すること
+3. `npm run build` がエラーなく完了すること
+4. 新機能には適切なテストが含まれていること
+
+## パフォーマンス
+
+IMPORTANT: 画像は必ずNext.jsの`<Image>`コンポーネントを使用してください
+IMPORTANT: クライアントコンポーネントは必要最小限に留めてください
+IMPORTANT: 大きなリストには仮想化（react-window）を検討してください
+
+## アクセシビリティ
+
+IMPORTANT: すべてのインタラクティブ要素にはaria-labelを付けてください
+IMPORTANT: フォームには適切なlabelとerror messageを設定してください
+IMPORTANT: カラーコントラストはWCAG AA基準を満たしてください
+
+## セキュリティ
+
+IMPORTANT: ユーザー入力は必ずバリデーションとサニタイゼーションを行ってください
+IMPORTANT: APIキーや秘密情報は環境変数（.env.local）に保存してください
+IMPORTANT: XSS、CSRF対策を常に考慮してください
+
+## ドキュメント
+
+IMPORTANT: 複雑なロジックには必ずコメントを付けてください
+IMPORTANT: 公開APIには必ずJSDoc形式のコメントを付けてください
+
+例:
+```typescript
+/**
+ * ユーザー情報を取得します
+ * @param userId - ユーザーID
+ * @returns ユーザー情報、または存在しない場合はnull
+ * @throws {APIError} API呼び出しが失敗した場合
+ */
+async function getUser(userId: string): Promise<User | null> {
+  // ...
+}
+```
+
+## よくある問題と解決策
+
+### 問題: ビルドエラー "Module not found"
+解決策: `npm install` を実行して依存関係を再インストール
+
+### 問題: テストが失敗する（タイムゾーン関連）
+解決策: テストでは固定日時を使用（`jest.useFakeTimers()`）
+
+### 問題: 型エラー "Type 'X' is not assignable to type 'Y'"
+解決策: `src/types/`の型定義を確認し、必要に応じて更新
+
+---
+
+このファイルは定期的に見直し、プロジェクトの進化に合わせて更新してください。
