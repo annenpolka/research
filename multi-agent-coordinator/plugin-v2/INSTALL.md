@@ -109,17 +109,19 @@ Create `.claude/swarm/tasks.jsonl` in your project:
 
 ### Team Setup (Automatic Installation)
 
-Add to your project's `.claude/settings.json`:
+Add to your project's `.claude/settings.json` (Claude Code looks for the `extraKnownMarketplaces` and `enabledPlugins` keys):
 
 ```json
 {
-  "marketplaces": [
-    {
-      "url": "https://raw.githubusercontent.com/annenpolka/research/main/multi-agent-coordinator/plugin-v2/.claude-plugin/marketplace.json",
-      "name": "swarm-coordinator-marketplace"
+  "extraKnownMarketplaces": {
+    "swarm-coordinator-marketplace": {
+      "source": {
+        "type": "json",
+        "url": "https://raw.githubusercontent.com/annenpolka/research/main/multi-agent-coordinator/plugin-v2/.claude-plugin/marketplace.json"
+      }
     }
-  ],
-  "plugins": {
+  },
+  "enabledPlugins": {
     "swarm-coordinator": {
       "enabled": true,
       "settings": {
@@ -132,6 +134,11 @@ Add to your project's `.claude/settings.json`:
 ```
 
 Team members will automatically have access to the plugin when they open the project.
+
+### Hook & Skill Definitions
+
+- `hooks/hooks.json` keeps the PascalCase hook names (`SessionStart`, `PreToolUse`, `PostToolUse`, `SessionEnd`) that Claude Code documents, so the runtime delivers the standard `hook_event_name` + `tool_input` payloads straight into `hooks/coordination.py`. If you need to customize the locking behavior, edit this file instead of the manifest so you stay within the supported schema.
+- `skills/swarm-coordinator/SKILL.md` provides the skill metadata (name, description, allowed-tools) and the `scripts/` directory contains the Python entry points, which is exactly how Claude Code expects marketplace skills to be laid out. This is the spot to add new scripts or update the YAML front matter before publishing.
 
 ## Plugin Management Commands
 
@@ -177,25 +184,19 @@ curl -fsSL https://claude.ai/install.sh | bash
 
 ### "Invalid marketplace schema" or schema validation errors
 
-If you get errors like:
+If you see errors such as:
 ```
 Error: Invalid marketplace schema from URL: name: Marketplace name cannot contain spaces...
 ```
 
-This means you tried to use a GitHub raw URL directly. **This is not supported.** Instead:
+Claude Code does accept HTTP/HTTPS marketplaces, but the document must match the schema published in the official docs. Double-check that your URL points directly to the `.../.claude-plugin/marketplace.json` file, then run:
 
-1. **Use Method 1 (Recommended)**: Clone the repository and add the marketplace locally:
-   ```bash
-   git clone https://github.com/annenpolka/research.git
-   cd research/multi-agent-coordinator/plugin-v2
-   claude
-   ```
-   Then in Claude: `/plugin marketplace add .`
+```
+/plugin marketplace add https://raw.githubusercontent.com/annenpolka/research/main/multi-agent-coordinator/plugin-v2/.claude-plugin/marketplace.json
+/plugin marketplace list
+```
 
-2. **Or use Method 2**: Install directly with absolute path:
-   ```
-   /plugin install /path/to/research/multi-agent-coordinator/plugin-v2
-   ```
+If the schema error persists (for example, due to a partially cached file), fall back to Method 1 (clone the repo locally and run `/plugin marketplace add .`) or Method 2 (`/plugin install /absolute/path/...`).
 
 ### Scripts not executable
 

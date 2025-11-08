@@ -1,6 +1,9 @@
 ---
 name: swarm-coordinator
 description: Multi-agent coordination for managing tasks, messages, and file locks across multiple Claude Code instances
+allowed-tools:
+  - shell
+  - python
 ---
 
 # Swarm Coordinator

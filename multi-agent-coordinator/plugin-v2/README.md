@@ -18,11 +18,14 @@
 claude
 ```
 
-**In Claude:**
+**In Claude (remote marketplace install):**
 ```
 /plugin marketplace add https://raw.githubusercontent.com/annenpolka/research/main/multi-agent-coordinator/plugin-v2/.claude-plugin/marketplace.json
+/plugin marketplace list
 /plugin install swarm-coordinator
 ```
+
+`/plugin marketplace list` confirms that Claude registered the HTTPS marketplace URL before you install the plugin, matching the flow described in Claude Code's marketplace documentation.
 
 That's it! No build step needed.
 
@@ -56,6 +59,12 @@ plugin-v2/
             ├── complete_task.py
             └── get_state.py
 ```
+
+## Hook & Skill Definitions
+
+Claude Code expects plugin hooks to be described with PascalCase event names such as `SessionStart`, `PreToolUse`, `PostToolUse`, and `SessionEnd`, and to receive the standard hook payload fields (`hook_event_name`, `tool_name`, `tool_input`, `tool_response`). Our manifest now points to `hooks/hooks.json`, which follows that schema and routes each event to `hooks/coordination.py` so file locks stay in sync with the official runtime contract.
+
+The swarm skill stays under `skills/swarm-coordinator`, where `SKILL.md` provides the required front matter (name, description, allowed-tools) and the `scripts/` directory holds the actual entry points, matching Claude Code's skill packaging rules for marketplace distribution.
 
 ## Usage Examples
 

@@ -19,6 +19,13 @@ SWARM_DIR = Path(".claude/swarm")
 LOCK_TIMEOUT_MINUTES = 5
 AGENT_NAME_ENV = "CLAUDE_AGENT_NAME"
 
+EVENT_ALIASES = {
+    "sessionstart": "session-start",
+    "sessionend": "session-end",
+    "pretooluse": "pre-tool-use",
+    "posttooluse": "post-tool-use",
+}
+
 
 class SwarmCoordinator:
     """Manages multi-agent coordination"""
@@ -95,14 +102,13 @@ Use `swarm_get_state` to check swarm status.
         }
 
     def handle_pre_tool_use(
-        self, tool_name: str, params: Dict[str, Any]
+        self, tool_name: str, tool_input: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Handle pre-tool-use event (file locking)"""
-        # Only intercept file editing tools
         if tool_name not in ["Edit", "Write", "MultiEdit"]:
             return {"block": False}
 
-        file_path = params.get("file_path")
+        file_path = self._extract_file_path(tool_input)
         if not file_path:
             return {"block": False}
 
@@ -142,17 +148,20 @@ Use `swarm_get_state` to check swarm status.
         }
 
     def handle_post_tool_use(
-        self, tool_name: str, params: Dict[str, Any], result: Dict[str, Any]
+        self,
+        tool_name: str,
+        tool_input: Dict[str, Any],
+        tool_response: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Handle post-tool-use event (lock release)"""
         if tool_name in ["Edit", "Write", "MultiEdit"]:
-            file_path = params.get("file_path")
-            if file_path and result.get("success"):
+            file_path = self._extract_file_path(tool_input)
+            if file_path and self._response_succeeded(tool_response):
                 self._release_lock(file_path)
 
         return {"success": True}
 
-    def handle_session_end(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    def handle_session_end(self, hook_context: Dict[str, Any]) -> Dict[str, Any]:
         """Handle session end event"""
         # Release all locks held by this agent
         self._release_all_locks()
@@ -161,13 +170,47 @@ Use `swarm_get_state` to check swarm status.
         termination_record = {
             "id": self.agent_id,
             "terminated_at": datetime.utcnow().isoformat(),
-            "session_duration": context.get("duration_seconds", 0),
+            "session_duration": hook_context.get("duration_seconds", 0),
         }
         self._append_jsonl("agents.jsonl", termination_record)
 
         return {"success": True}
 
     # Helper methods
+
+    def _extract_file_path(self, tool_input: Any) -> Optional[str]:
+        """Extract a single file path from tool input payloads."""
+        if isinstance(tool_input, str):
+            return tool_input
+
+        if not isinstance(tool_input, dict):
+            return None
+
+        if tool_input.get("file_path"):
+            return tool_input["file_path"]
+
+        if tool_input.get("path"):
+            return tool_input["path"]
+
+        paths = tool_input.get("paths")
+        if isinstance(paths, list) and paths:
+            return paths[0]
+
+        return None
+
+    def _response_succeeded(self, tool_response: Any) -> bool:
+        """Normalize success detection from Claude tool responses."""
+        if not isinstance(tool_response, dict):
+            return True
+
+        if "success" in tool_response:
+            return bool(tool_response["success"])
+
+        status = tool_response.get("status")
+        if status is None:
+            return True
+
+        return str(status).lower() in {"ok", "success", "done"}
 
     def _check_lock(self, file_path: str) -> Optional[Dict[str, Any]]:
         """Check if file is currently locked"""
@@ -270,45 +313,67 @@ Use `swarm_get_state` to check swarm status.
         with open(filepath, "a") as f:
             f.write(json.dumps(record) + "\n")
 
+def _normalize_event_name(event_name: Optional[str]) -> str:
+    """Normalize hook event names to kebab-case for routing."""
+    if not event_name:
+        return ""
+
+    token = event_name.replace("-", "").replace("_", "").lower()
+    normalized = EVENT_ALIASES.get(token)
+    if normalized:
+        return normalized
+
+    if token:
+        return event_name.lower()
+
+    return ""
+
+
+def process_hook_event(event_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Process a Claude Code hook payload and return the hook response."""
+    coordinator = SwarmCoordinator()
+    event_type = _normalize_event_name(
+        event_data.get("hook_event_name") or event_data.get("event")
+    )
+    hook_context = event_data.get("hook_context") or event_data.get("context") or {}
+
+    try:
+        if event_type == "session-start":
+            return coordinator.handle_session_start(hook_context)
+        if event_type == "pre-tool-use":
+            tool_name = event_data.get("tool_name") or hook_context.get("tool_name", "")
+            tool_input = event_data.get("tool_input") or hook_context.get("params") or {}
+            return coordinator.handle_pre_tool_use(tool_name, tool_input)
+        if event_type == "post-tool-use":
+            tool_name = event_data.get("tool_name") or hook_context.get("tool_name", "")
+            tool_input = event_data.get("tool_input") or hook_context.get("params") or {}
+            tool_response = (
+                event_data.get("tool_response")
+                or hook_context.get("result")
+                or {}
+            )
+            return coordinator.handle_post_tool_use(
+                tool_name,
+                tool_input,
+                tool_response,
+            )
+        if event_type == "session-end":
+            return coordinator.handle_session_end(hook_context)
+        return {"error": f"Unknown event type: {event_type}"}
+    except Exception as exc:
+        return {"error": str(exc)}
+
 
 def main():
     """Main entry point for hook execution"""
-    # Parse hook event from stdin
+    raw_input = sys.stdin.read().strip() or "{}"
     try:
-        event_data = json.loads(sys.stdin.read())
+        event_data = json.loads(raw_input)
     except json.JSONDecodeError:
         print(json.dumps({"error": "Invalid JSON input"}))
         sys.exit(1)
 
-    event_type = event_data.get("event")
-    context = event_data.get("context", {})
-
-    coordinator = SwarmCoordinator()
-
-    # Route to appropriate handler
-    result = {}
-    try:
-        if event_type == "session-start":
-            result = coordinator.handle_session_start(context)
-        elif event_type == "pre-tool-use":
-            result = coordinator.handle_pre_tool_use(
-                context.get("tool_name", ""),
-                context.get("params", {}),
-            )
-        elif event_type == "post-tool-use":
-            result = coordinator.handle_post_tool_use(
-                context.get("tool_name", ""),
-                context.get("params", {}),
-                context.get("result", {}),
-            )
-        elif event_type == "session-end":
-            result = coordinator.handle_session_end(context)
-        else:
-            result = {"error": f"Unknown event type: {event_type}"}
-    except Exception as e:
-        result = {"error": str(e)}
-
-    # Output result as JSON
+    result = process_hook_event(event_data)
     print(json.dumps(result))
 
 

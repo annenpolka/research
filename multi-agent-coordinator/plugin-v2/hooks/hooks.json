@@ -1,0 +1,51 @@
+{
+  "description": "Route Claude Code hook events to the swarm coordination Python script.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "description": "Register the agent and announce pending tasks when a session begins.",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/coordination.py"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "description": "Acquire file locks before edit/write tools run.",
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/coordination.py"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "description": "Release file locks after edit/write tools complete.",
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/coordination.py"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "description": "Clean up locks when the user ends the session.",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/coordination.py"
+          }
+        ]
+      }
+    ]
+  }
+}

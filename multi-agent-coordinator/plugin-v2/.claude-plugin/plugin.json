@@ -22,52 +22,7 @@
   "skills": [
     "${PLUGIN_DIR}/skills/swarm-coordinator"
   ],
-  "hooks": {
-    "session-start": {
-      "command": "python3",
-      "args": ["${PLUGIN_DIR}/hooks/coordination.py"],
-      "input": {
-        "event": "session-start",
-        "context": {
-          "session_id": "${SESSION_ID}"
-        }
-      }
-    },
-    "pre-tool-use": {
-      "command": "python3",
-      "args": ["${PLUGIN_DIR}/hooks/coordination.py"],
-      "input": {
-        "event": "pre-tool-use",
-        "context": {
-          "tool_name": "${TOOL_NAME}",
-          "params": "${TOOL_PARAMS}"
-        }
-      }
-    },
-    "post-tool-use": {
-      "command": "python3",
-      "args": ["${PLUGIN_DIR}/hooks/coordination.py"],
-      "input": {
-        "event": "post-tool-use",
-        "context": {
-          "tool_name": "${TOOL_NAME}",
-          "params": "${TOOL_PARAMS}",
-          "result": "${TOOL_RESULT}"
-        }
-      }
-    },
-    "session-end": {
-      "command": "python3",
-      "args": ["${PLUGIN_DIR}/hooks/coordination.py"],
-      "input": {
-        "event": "session-end",
-        "context": {
-          "session_id": "${SESSION_ID}",
-          "duration_seconds": "${DURATION}"
-        }
-      }
-    }
-  },
+  "hooks": "./hooks/hooks.json",
   "settings": {
     "lockTimeoutMinutes": 5,
     "maxAgents": 10

@@ -115,6 +115,12 @@ When adding new functionality:
 4. Mock file system with `tempfile`
 5. Run tests to verify coverage
 
+## Hook Coordination Test List (2025-11-08)
+
+- [x] Session start hook emits onboarding context and records the agent session
+- [ ] Pre-tool hook blocks edits on files locked by other agents
+- [ ] Session end hook releases lingering locks
+
 ## Dependencies
 
 - pytest >= 7.0.0
