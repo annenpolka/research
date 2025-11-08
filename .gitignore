@@ -61,6 +61,9 @@ coverage.xml
 *.sqlite
 *.sqlite3
 
+# Swarm Coordinator cache
+.claude/swarm/.cache/
+
 # Temporary files
 tmp/
 temp/

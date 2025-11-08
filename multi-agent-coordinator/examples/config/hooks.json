@@ -1,0 +1,49 @@
+{
+  "$schema": "https://code.claude.com/schemas/hooks.json",
+  "hooks": {
+    "session-start": {
+      "command": "python3",
+      "args": [".claude/hooks/coordination.py"],
+      "input": {
+        "event": "session-start",
+        "context": {
+          "session_id": "${SESSION_ID}"
+        }
+      }
+    },
+    "pre-tool-use": {
+      "command": "python3",
+      "args": [".claude/hooks/coordination.py"],
+      "input": {
+        "event": "pre-tool-use",
+        "context": {
+          "tool_name": "${TOOL_NAME}",
+          "params": "${TOOL_PARAMS}"
+        }
+      }
+    },
+    "post-tool-use": {
+      "command": "python3",
+      "args": [".claude/hooks/coordination.py"],
+      "input": {
+        "event": "post-tool-use",
+        "context": {
+          "tool_name": "${TOOL_NAME}",
+          "params": "${TOOL_PARAMS}",
+          "result": "${TOOL_RESULT}"
+        }
+      }
+    },
+    "session-end": {
+      "command": "python3",
+      "args": [".claude/hooks/coordination.py"],
+      "input": {
+        "event": "session-end",
+        "context": {
+          "session_id": "${SESSION_ID}",
+          "duration_seconds": "${DURATION}"
+        }
+      }
+    }
+  }
+}

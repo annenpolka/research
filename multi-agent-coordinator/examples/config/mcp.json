@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "swarm-coordinator": {
+      "command": "node",
+      "args": [".claude/mcp-servers/swarm-coordinator/dist/index.js"],
+      "env": {
+        "SWARM_DIR": ".claude/swarm"
+      }
+    }
+  }
+}

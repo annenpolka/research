@@ -1,0 +1,28 @@
+{
+  "name": "Swarm Coordinator Marketplace",
+  "description": "Multi-agent coordination plugins for Claude Code",
+  "version": "1.0.0",
+  "plugins": [
+    {
+      "name": "swarm-coordinator",
+      "source": "https://github.com/annenpolka/research/tree/main/multi-agent-coordinator/plugin",
+      "category": "productivity",
+      "tags": [
+        "multi-agent",
+        "coordination",
+        "collaboration",
+        "file-locking",
+        "task-management",
+        "messaging"
+      ],
+      "description": "Lightweight multi-agent coordination system with automatic file locking, task management, and agent messaging",
+      "author": {
+        "name": "Research Project",
+        "email": "research@example.com"
+      },
+      "version": "0.1.0",
+      "homepage": "https://github.com/annenpolka/research/tree/main/multi-agent-coordinator",
+      "license": "MIT"
+    }
+  ]
+}

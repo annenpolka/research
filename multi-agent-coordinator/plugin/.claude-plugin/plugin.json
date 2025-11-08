@@ -1,0 +1,81 @@
+{
+  "name": "swarm-coordinator",
+  "version": "0.1.0",
+  "description": "Lightweight multi-agent coordination system for Claude Code with automatic file locking, task management, and agent messaging",
+  "author": {
+    "name": "Research Project",
+    "email": "research@example.com"
+  },
+  "homepage": "https://github.com/annenpolka/research/tree/main/multi-agent-coordinator",
+  "repository": "https://github.com/annenpolka/research",
+  "license": "MIT",
+  "keywords": [
+    "multi-agent",
+    "coordination",
+    "collaboration",
+    "file-locking",
+    "task-management",
+    "messaging"
+  ],
+  "category": "productivity",
+  "hooks": {
+    "session-start": {
+      "command": "python3",
+      "args": ["${PLUGIN_DIR}/hooks/coordination.py"],
+      "input": {
+        "event": "session-start",
+        "context": {
+          "session_id": "${SESSION_ID}"
+        }
+      }
+    },
+    "pre-tool-use": {
+      "command": "python3",
+      "args": ["${PLUGIN_DIR}/hooks/coordination.py"],
+      "input": {
+        "event": "pre-tool-use",
+        "context": {
+          "tool_name": "${TOOL_NAME}",
+          "params": "${TOOL_PARAMS}"
+        }
+      }
+    },
+    "post-tool-use": {
+      "command": "python3",
+      "args": ["${PLUGIN_DIR}/hooks/coordination.py"],
+      "input": {
+        "event": "post-tool-use",
+        "context": {
+          "tool_name": "${TOOL_NAME}",
+          "params": "${TOOL_PARAMS}",
+          "result": "${TOOL_RESULT}"
+        }
+      }
+    },
+    "session-end": {
+      "command": "python3",
+      "args": ["${PLUGIN_DIR}/hooks/coordination.py"],
+      "input": {
+        "event": "session-end",
+        "context": {
+          "session_id": "${SESSION_ID}",
+          "duration_seconds": "${DURATION}"
+        }
+      }
+    }
+  },
+  "mcpServers": {
+    "swarm-coordinator": {
+      "command": "node",
+      "args": ["${PLUGIN_DIR}/mcp-servers/swarm-coordinator/dist/index.js"],
+      "env": {
+        "SWARM_DIR": ".claude/swarm"
+      }
+    }
+  },
+  "settings": {
+    "lockTimeoutMinutes": 5,
+    "maxAgents": 10,
+    "enableObservability": false
+  }
+}
