@@ -58,6 +58,7 @@ else:
 - **[claude-auto-approve-commands](./claude-auto-approve-commands)**: Claude Codeで特定のコマンドを自動許可する設定方法の調査と実装（allowedTools、defaultMode、PreToolUseフック）
 - **[claude-code-hooks-observability-plugin](./claude-code-hooks-observability-plugin)**: Claude Code Hooks Multi-Agent Observability システムのPlugin化プロトタイプ - 完全に実現可能で、MCPサーバー統合により元のシステムを超える機能を提供
 - **[claude-code-prompt-improver-analysis](./claude-code-prompt-improver-analysis)**: Claude Code Prompt Improver - 曖昧なプロンプトを自動改善するUserPromptSubmitフック（83行のPython、会話履歴活用、リサーチベースの質問生成）
+- **[github-actions-cross-repo](./github-actions-cross-repo)**: GitHub Actionsで他のリポジトリを参照する方法の調査と検証。Deploy Keys、GitHub App、PATなど複数の認証方法を比較。
 - **[japanese-to-romaji](./japanese-to-romaji)**: 日本語（漢字含む）→ローマ字変換ライブラリの比較研究：pykakasi、cutlet、romkan、jaconvを機能・精度・パフォーマンスで評価
 - **[multi-agent-maildeck](./multi-agent-maildeck)**: MailDeck: 非侵襲な多エージェント制御層（Beads + MCP Agent Mail + Claude Hooks）構想と実装ExecPlan。
 - **[prompt-ops-research](./prompt-ops-research)**: プロンプト自動改善とPromptOpsの包括的調査: Claude Code公式機能、コミュニティツール、主要フレームワーク（DSPy、AutoPrompt、LangSmith）の実践的活用法
