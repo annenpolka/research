@@ -1,0 +1,6 @@
+pykakasi==2.3.0
+cutlet==0.5.0
+romkan==0.2.1
+jaconv==0.4.0
+fugashi==1.5.2
+unidic-lite==1.0.8
