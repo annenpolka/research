@@ -1,0 +1,4 @@
+{"id":"task-001","description":"Implement user authentication API","status":"pending","dependencies":[],"priority":10,"files":["src/auth/**","tests/auth/**"]}
+{"id":"task-002","description":"Build dashboard UI components","status":"pending","dependencies":[],"priority":8,"files":["src/components/dashboard/**","src/styles/**"]}
+{"id":"task-003","description":"Create integration tests for auth flow","status":"pending","dependencies":["task-001","task-002"],"priority":5,"files":["tests/integration/**"]}
+{"id":"task-004","description":"Write API documentation","status":"pending","dependencies":["task-001"],"priority":3,"files":["docs/api/**"]}
