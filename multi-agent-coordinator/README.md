@@ -2,21 +2,44 @@
 
 **非侵襲的で軽量なマルチエージェント調整システム**
 
-## 🚀 クイックスタート（プラグイン版）
+## 🚀 クイックスタート
+
+### **v2: Skills版** (最新・推奨)
 
 ```bash
-# 1コマンドでインストール
+# たった1コマンド - ビルド不要！
 claude-code plugin install swarm-coordinator
 
-# MCPサーバーをビルド（初回のみ）
-cd .claude/plugins/swarm-coordinator/mcp-servers/swarm-coordinator
-npm install && npm run build
-
-# 使用開始
+# 即座に使用開始
 claude-code
 ```
 
-詳細は [PLUGIN.md](./PLUGIN.md) を参照してください。
+**特徴:**
+- ✅ ビルド不要（npm install不要）
+- ✅ Python のみ（Node.js不要）
+- ✅ インストール時間: **5秒**
+
+詳細: [plugin-v2/README.md](./plugin-v2/README.md)
+
+---
+
+### v1: MCP版（レガシー）
+
+```bash
+# インストール
+claude-code plugin install swarm-coordinator@v1
+
+# ビルドが必要
+cd .claude/plugins/swarm-coordinator/mcp-servers/swarm-coordinator
+npm install && npm run build
+```
+
+**特徴:**
+- ✅ 明示的なツールAPI
+- ❌ Node.js + ビルドステップ必要
+- ❌ インストール時間: 2分
+
+詳細: [PLUGIN.md](./PLUGIN.md)
 
 ---
 
@@ -24,8 +47,9 @@ claude-code
 
 このプロジェクトは、Claude Codeの複数インスタンスを効率的に管理するための調整システムを提案します。既存の3つの優れたアプローチ（mcp_agent_mail、claude-code-hooks-multi-agent-observability、beads）から学んだベストプラクティスを統合し、シンプルでエレガントな設計を実現します。
 
-**2つの使用方法:**
-- 🔌 **プラグイン版** (推奨): 1コマンドインストール、自動セットアップ
+**3つの使用方法:**
+- ⚡ **v2: Skills版** (最新・推奨): ゼロビルド、Python のみ
+- 🔌 **v1: MCP版**: 明示的API、Node.js + ビルド必要
 - 📦 **手動セットアップ版**: カスタマイズ可能、学習用
 
 ## 背景と動機
