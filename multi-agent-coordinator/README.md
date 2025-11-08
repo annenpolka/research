@@ -64,6 +64,7 @@ v1はビルドステップが必要なため非推奨です。v2を使用して�
    - ハッシュベースID（衝突回避）
    - 依存関係追跡とタスク管理
    - エージェント中心の設計思想
+   - 詳細分析: [Beadsの同時並行編集処理とSwarm Coordinatorへの応用](./BEADS_CONCURRENT_EDITING.md)
 
 ### 解決すべき課題
 
@@ -386,6 +387,30 @@ const messages = await mcp.call("swarm_get_messages", {
 - **同期コスト**: Gitコミット不要（JSONLはappend-only）
 - **スケーラビリティ**: 5-10エージェントまで検証済み
 - **ストレージ**: 1日あたり ~1-5MB（メッセージ・ロック履歴）
+
+## 研究と発見
+
+### Beadsから学んだ同時並行編集の戦略
+
+詳細な調査結果: [BEADS_CONCURRENT_EDITING.md](./BEADS_CONCURRENT_EDITING.md)
+
+**主要な発見:**
+
+1. **ハッシュベースID** - 順序付きIDではなくハッシュベース（`bd-a1b2`）により並行作業時のID衝突を完全回避
+2. **カスタムGitマージドライバー** - JSONLファイルの構造的理解に基づくレコードレベルマージ
+3. **JSONL形式の利点** - 各行が独立したレコードで、新規追加は常にファイル末尾のため競合が起きにくい
+4. **二重永続化戦略** - `.beads/issues.jsonl`（Git管理）+ `.beads/*.db`（SQLiteキャッシュ、.gitignore）
+5. **Gitフックによる自動同期** - pre-commit（強制エクスポート）、post-merge（強制インポート）
+
+**Swarm Coordinatorへの応用提案:**
+
+現在の実装では手動定義ID（"task-001"）を使用していますが、以下の改善を検討：
+
+- **Phase 1（高優先度）**: ハッシュベースタスクID、SQLiteキャッシュ導入
+- **Phase 2（中優先度）**: Gitフック自動化
+- **Phase 3（低優先度）**: カスタムマージドライバー（既にJSONLで十分マージ可能）
+
+これらの改善により、Beadsと同等以上の並行編集能力を獲得できます。
 
 ## ロードマップ
 

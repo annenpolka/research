@@ -4,9 +4,9 @@
 import argparse
 import json
 import os
-import hashlib
 from datetime import datetime
 from pathlib import Path
+from id_generator import generate_agent_id
 
 SWARM_DIR = Path(".claude/swarm")
 
@@ -20,7 +20,7 @@ def get_agent_id() -> str:
     if session_file.exists():
         return session_file.read_text().strip()
 
-    agent_id = f"agent-{hashlib.sha256(os.urandom(16)).hexdigest()[:8]}"
+    agent_id = generate_agent_id()
     SWARM_DIR.mkdir(parents=True, exist_ok=True)
     session_file.write_text(agent_id)
     return agent_id
