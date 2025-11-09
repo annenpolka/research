@@ -69,3 +69,4 @@ tmp/
 temp/
 *.tmp
 code-prompt-improver/
+cc-sessions-mode-behavior/cc-sessions/
