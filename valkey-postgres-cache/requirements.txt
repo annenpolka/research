@@ -1,0 +1,8 @@
+# Valkey (Redis互換クライアント)
+redis==5.0.1
+
+# PostgreSQL アダプタ
+psycopg2-binary==2.9.9
+
+# ユーティリティ
+python-dotenv==1.0.0

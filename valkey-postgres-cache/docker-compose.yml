@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # Valkey - キャッシュ層
+  valkey:
+    image: valkey/valkey:7.2
+    container_name: valkey-cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - valkey_data:/data
+    command: >
+      valkey-server
+      --appendonly yes
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - cache_network
+
+  # PostgreSQL - 永続化層
+  postgres:
+    image: postgres:16
+    container_name: postgres-db
+    environment:
+      POSTGRES_DB: params_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - cache_network
+
+volumes:
+  valkey_data:
+    driver: local
+  postgres_data:
+    driver: local
+
+networks:
+  cache_network:
+    driver: bridge
