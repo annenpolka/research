@@ -1,0 +1,1 @@
+LLM向けGitリポジトリコード検索MCPサーバーKIRIのアーキテクチャ分析：Daemon/Proxy多層設計、DuckDB blob/tree分離モデル、tree-sitter AST解析による5言語対応
