@@ -57,6 +57,7 @@ else:
 - **[beads-non-invasive-analysis](./beads-non-invasive-analysis)**: Beadsは相対的に非侵襲的だが、gitフックとマージドライバーの強制インストールにより一定の侵襲性を持つ。ただし、.beads/を.gitignoreに追加することで、元のリポジトリにコミット対象を一切増やさずに完全ローカル運用が可能。AGENTS.mdは自動変更されない。
 - **[claude-auto-approve-commands](./claude-auto-approve-commands)**: Claude Codeで特定のコマンドを自動許可する設定方法の調査と実装（allowedTools、defaultMode、PreToolUseフック）
 - **[claude-code-hooks-observability-plugin](./claude-code-hooks-observability-plugin)**: Claude Code Hooks Multi-Agent Observability システムのPlugin化プロトタイプ - 完全に実現可能で、MCPサーバー統合により元のシステムを超える機能を提供
+- **[claude-code-infrastructure-showcase](./claude-code-infrastructure-showcase)**: プロジェクトの説明
 - **[claude-code-prompt-improver-analysis](./claude-code-prompt-improver-analysis)**: Claude Code Prompt Improver - 曖昧なプロンプトを自動改善するUserPromptSubmitフック（83行のPython、会話履歴活用、リサーチベースの質問生成）
 - **[github-actions-cross-repo](./github-actions-cross-repo)**: GitHub Actionsで他のリポジトリを参照する方法の調査と検証。Deploy Keys、GitHub App、PATなど複数の認証方法を比較。
 - **[japanese-to-romaji](./japanese-to-romaji)**: 日本語（漢字含む）→ローマ字変換ライブラリの比較研究：pykakasi、cutlet、romkan、jaconvを機能・精度・パフォーマンスで評価
