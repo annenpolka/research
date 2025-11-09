@@ -1,0 +1,23 @@
+# Output files
+output/
+*.pdf
+*.png
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv
+
+# Analysis results
+analysis_results.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
