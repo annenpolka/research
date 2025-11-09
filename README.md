@@ -55,6 +55,7 @@ else:
     print("*プロジェクトはまだありません*")
 ]]] -->
 - **[beads-non-invasive-analysis](./beads-non-invasive-analysis)**: Beadsは相対的に非侵襲的だが、gitフックとマージドライバーの強制インストールにより一定の侵襲性を持つ。ただし、.beads/を.gitignoreに追加することで、元のリポジトリにコミット対象を一切増やさずに完全ローカル運用が可能。AGENTS.mdは自動変更されない。
+- **[cc-sessions-mode-behavior](./cc-sessions-mode-behavior)**: このプロジェクトは、[cc-sessions](https://github.com/GWUDCAP/cc-sessions)のDAIC（Discussion-Alignment-Implementation-Check）メソドロジーにおけるモード動作とその実現方法を調査した研究です。 cc-sessionsは、Claude Codeのための構造化されたAIペアプログラミングワークフレームです。Claudeがコードを書く前に議論し、承認を得ることを強制する仕組みを提供します。
 - **[claude-auto-approve-commands](./claude-auto-approve-commands)**: Claude Codeで特定のコマンドを自動許可する設定方法の調査と実装（allowedTools、defaultMode、PreToolUseフック）
 - **[claude-code-hooks-observability-plugin](./claude-code-hooks-observability-plugin)**: Claude Code Hooks Multi-Agent Observability システムのPlugin化プロトタイプ - 完全に実現可能で、MCPサーバー統合により元のシステムを超える機能を提供
 - **[claude-code-infrastructure-showcase](./claude-code-infrastructure-showcase)**: プロジェクトの説明
