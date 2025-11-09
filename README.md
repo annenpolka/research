@@ -62,6 +62,7 @@ else:
 - **[japanese-to-romaji](./japanese-to-romaji)**: 日本語（漢字含む）→ローマ字変換ライブラリの比較研究：pykakasi、cutlet、romkan、jaconvを機能・精度・パフォーマンスで評価
 - **[multi-agent-coordinator](./multi-agent-coordinator)**: Claude Codeフック+Skillsベースの軽量マルチエージェント調整システム（非侵襲的、透過的ファイルロック、Gitネイティブ、Beads並行編集戦略の分析と応用）
 - **[multi-agent-maildeck](./multi-agent-maildeck)**: MailDeck: 非侵襲な多エージェント制御層（Beads + MCP Agent Mail + Claude Hooks）構想と実装ExecPlan。
+- **[pdf-to-png-conversion](./pdf-to-png-conversion)**: PDF to PNG変換方法の比較検証。PyMuPDFが最速（0.116秒）、Ghostscriptが最小サイズ（15.1KB/ページ）。総合的にはPyMuPDFを推奨。
 - **[prompt-ops-research](./prompt-ops-research)**: プロンプト自動改善とPromptOpsの包括的調査: Claude Code公式機能、コミュニティツール、主要フレームワーク（DSPy、AutoPrompt、LangSmith）の実践的活用法
 - **[vibe-kanban-container-setup](./vibe-kanban-container-setup)**: vibe-kanban（AIエージェントオーケストレーター）を隔離されたコンテナ環境で安全に実行するための包括的なガイドと実装例。vibe-kanbanはnpx経由でエージェントCLIをコンテナ内で自動実行。ユーザーはAPI keyのみ必要でエージェントのインストールは不要。
 <!-- [[[end]]] -->
