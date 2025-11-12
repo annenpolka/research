@@ -1,0 +1,1 @@
+RailsでContent-Type: application/jsonのパラメータは型を保持し、文字列に変換されない

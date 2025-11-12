@@ -1,0 +1,20 @@
+# Rails
+*.log
+tmp/
+storage/
+*.sqlite3
+*.sqlite3-journal
+*.sqlite3-*
+
+# Bundler
+.bundle
+vendor/bundle
+
+# RubyMine
+.idea
+
+# Environment
+.env
+
+# Server log
+server.log
