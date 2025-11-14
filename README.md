@@ -60,6 +60,7 @@ else:
 - **[claude-code-hooks-observability-plugin](./claude-code-hooks-observability-plugin)**: Claude Code Hooks Multi-Agent Observability システムのPlugin化プロトタイプ - 完全に実現可能で、MCPサーバー統合により元のシステムを超える機能を提供
 - **[claude-code-infrastructure-showcase](./claude-code-infrastructure-showcase)**: プロジェクトの説明
 - **[claude-code-prompt-improver-analysis](./claude-code-prompt-improver-analysis)**: Claude Code Prompt Improver - 曖昧なプロンプトを自動改善するUserPromptSubmitフック（83行のPython、会話履歴活用、リサーチベースの質問生成）
+- **[claude-skill-meta-skill](./claude-skill-meta-skill)**: Claude Codeで新しいスキルを作成するメタスキル（skill-creator）の研究と実装。スキル構造、設計パターン、ベストプラクティスを体系化。
 - **[github-actions-cross-repo](./github-actions-cross-repo)**: GitHub Actionsで他のリポジトリを参照する方法の調査と検証。Deploy Keys、GitHub App、PATなど複数の認証方法を比較。
 - **[japanese-to-romaji](./japanese-to-romaji)**: 日本語（漢字含む）→ローマ字変換ライブラリの比較研究：pykakasi、cutlet、romkan、jaconvを機能・精度・パフォーマンスで評価
 - **[multi-agent-coordinator](./multi-agent-coordinator)**: Claude Codeフック+Skillsベースの軽量マルチエージェント調整システム（非侵襲的、透過的ファイルロック、Gitネイティブ、Beads並行編集戦略の分析と応用）
