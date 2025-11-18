@@ -1,0 +1,1 @@
+PythonとRubyで数千万件のSQLバルクインサート性能を比較。psycopg2 COPYとactiverecord-copyが最速。

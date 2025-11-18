@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Ruby
+*.gem
+*.rbc
+/.bundle/
+/vendor/bundle/
+Gemfile.lock
+
+# ベンチマーク結果
+results_*.txt
+*.log
+
+# Docker
+.dockerignore
+
+# データベース
+postgres_data/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
