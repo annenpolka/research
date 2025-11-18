@@ -1,0 +1,15 @@
+# PostgreSQL drivers
+psycopg2-binary==2.9.9
+psycopg==3.2.1
+
+# MySQL drivers
+PyMySQL==1.1.1
+mysqlclient==2.2.4
+
+# ORM and utilities
+SQLAlchemy==2.0.35
+faker==30.8.2
+
+# Performance monitoring
+psutil==6.1.0
+memory-profiler==0.61.0

@@ -1,0 +1,130 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: benchmark_postgres
+    environment:
+      POSTGRES_USER: benchmark
+      POSTGRES_PASSWORD: benchmark
+      POSTGRES_DB: benchmark
+      # パフォーマンス最適化設定
+      POSTGRES_SHARED_BUFFERS: 256MB
+      POSTGRES_WORK_MEM: 16MB
+      POSTGRES_MAINTENANCE_WORK_MEM: 128MB
+      POSTGRES_EFFECTIVE_CACHE_SIZE: 1GB
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    command:
+      - postgres
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - work_mem=16MB
+      - -c
+      - maintenance_work_mem=128MB
+      - -c
+      - effective_cache_size=1GB
+      - -c
+      - checkpoint_completion_target=0.9
+      - -c
+      - wal_buffers=16MB
+      - -c
+      - max_wal_size=2GB
+      - -c
+      - min_wal_size=1GB
+      - -c
+      - fsync=on
+      - -c
+      - synchronous_commit=on
+    networks:
+      - benchmark_network
+
+  mysql:
+    image: mysql:8.0
+    container_name: benchmark_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: benchmark
+      MYSQL_DATABASE: benchmark
+      MYSQL_USER: benchmark
+      MYSQL_PASSWORD: benchmark
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./mysql/my.cnf:/etc/mysql/conf.d/custom.cnf
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --innodb-buffer-pool-size=512M
+      - --innodb-log-file-size=256M
+      - --innodb-flush-log-at-trx-commit=1
+      - --max-allowed-packet=64M
+      - --innodb-flush-method=O_DIRECT
+    networks:
+      - benchmark_network
+
+  # Pythonベンチマーク実行環境
+  python-bench:
+    build:
+      context: ../python
+      dockerfile: Dockerfile
+    container_name: benchmark_python
+    depends_on:
+      - postgres
+      - mysql
+    volumes:
+      - ../python:/app
+      - ../results:/results
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: benchmark
+      POSTGRES_PASSWORD: benchmark
+      POSTGRES_DB: benchmark
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: benchmark
+      MYSQL_PASSWORD: benchmark
+      MYSQL_DB: benchmark
+    networks:
+      - benchmark_network
+    command: tail -f /dev/null
+
+  # Rubyベンチマーク実行環境
+  ruby-bench:
+    build:
+      context: ../ruby
+      dockerfile: Dockerfile
+    container_name: benchmark_ruby
+    depends_on:
+      - postgres
+      - mysql
+    volumes:
+      - ../ruby:/app
+      - ../results:/results
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: benchmark
+      POSTGRES_PASSWORD: benchmark
+      POSTGRES_DB: benchmark
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: benchmark
+      MYSQL_PASSWORD: benchmark
+      MYSQL_DB: benchmark
+    networks:
+      - benchmark_network
+    command: tail -f /dev/null
+
+networks:
+  benchmark_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  mysql_data:

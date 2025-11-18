@@ -1,0 +1,22 @@
+source 'https://rubygems.org'
+
+# ActiveRecord
+gem 'activerecord', '~> 7.1'
+gem 'activerecord-import', '~> 1.5'
+
+# Database adapters
+gem 'pg', '~> 1.5'
+gem 'mysql2', '~> 0.5'
+
+# PostgreSQL COPY support
+gem 'activerecord-copy', '~> 1.7'
+
+# Faker for data generation
+gem 'faker', '~> 3.2'
+
+# Benchmarking
+gem 'benchmark-ips', '~> 2.13'
+gem 'benchmark-memory', '~> 0.2'
+
+# JSON handling
+gem 'json', '~> 2.7'
