@@ -1,0 +1,32 @@
+{
+  "name": "dev-manager-mcp",
+  "private": false,
+  "version": "0.1.2",
+  "main": "index.js",
+  "bin": {
+    "dev-manager-mcp": "bin/cli.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BloopAI/dev-manager-mcp",
+    "directory": "npx-cli"
+  },
+  "keywords": [
+    "mcp",
+    "dev-server",
+    "daemon"
+  ],
+  "author": "",
+  "license": "MIT",
+  "description": "MCP Dev Server Manager - A daemon for managing development servers",
+  "dependencies": {
+    "adm-zip": "^0.5.16"
+  },
+  "files": [
+    "dist",
+    "bin"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,140 @@
+use crate::log_buffer::LogBuffer;
+use std::sync::{Arc, Mutex};
+use std::time::Instant;
+use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio::process::Child;
+use tokio::time::{timeout, Duration};
+
+enum ProcessState {
+    Running(Child),
+    Exited { exited_at: Instant },
+}
+
+pub struct ServerEntry {
+    state: ProcessState,
+    pub port: u16,
+    pub last_activity: Instant,
+    stdout_log: Arc<Mutex<LogBuffer>>,
+    stderr_log: Arc<Mutex<LogBuffer>>,
+}
+
+impl ServerEntry {
+    pub fn new(mut child: Child, port: u16) -> Self {
+        let stdout_log = Arc::new(Mutex::new(LogBuffer::new()));
+        let stderr_log = Arc::new(Mutex::new(LogBuffer::new()));
+
+        if let Some(stdout) = child.stdout.take() {
+            let log = stdout_log.clone();
+            tokio::spawn(async move {
+                let reader = BufReader::new(stdout);
+                let mut lines = reader.lines();
+                while let Ok(Some(line)) = lines.next_line().await {
+                    if let Ok(mut buffer) = log.lock() {
+                        buffer.push(line + "\n");
+                    }
+                }
+            });
+        }
+
+        if let Some(stderr) = child.stderr.take() {
+            let log = stderr_log.clone();
+            tokio::spawn(async move {
+                let reader = BufReader::new(stderr);
+                let mut lines = reader.lines();
+                while let Ok(Some(line)) = lines.next_line().await {
+                    if let Ok(mut buffer) = log.lock() {
+                        buffer.push(line + "\n");
+                    }
+                }
+            });
+        }
+
+        Self {
+            state: ProcessState::Running(child),
+            port,
+            last_activity: Instant::now(),
+            stdout_log,
+            stderr_log,
+        }
+    }
+
+    pub fn poll_exit(&mut self) -> bool {
+        if let ProcessState::Running(child) = &mut self.state {
+            if let Ok(Some(_)) = child.try_wait() {
+                self.state = ProcessState::Exited {
+                    exited_at: Instant::now(),
+                };
+                return true;
+            }
+        }
+        false
+    }
+
+    pub fn is_running(&self) -> bool {
+        matches!(self.state, ProcessState::Running(_))
+    }
+
+    pub fn exited_at(&self) -> Option<Instant> {
+        if let ProcessState::Exited { exited_at } = self.state {
+            Some(exited_at)
+        } else {
+            None
+        }
+    }
+
+    pub async fn stop(&mut self) -> anyhow::Result<()> {
+        if let ProcessState::Running(child) = &mut self.state {
+            #[cfg(unix)]
+            {
+                if let Some(pid) = child.id() {
+                    let pgid = -(pid as i32);
+                    unsafe {
+                        libc::kill(pgid, libc::SIGTERM);
+                    }
+                }
+
+                if timeout(Duration::from_secs(5), child.wait()).await.is_err() {
+                    if let Some(pid) = child.id() {
+                        let pgid = -(pid as i32);
+                        unsafe {
+                            libc::kill(pgid, libc::SIGKILL);
+                        }
+                    }
+                    let _ = timeout(Duration::from_secs(2), child.wait()).await;
+                }
+            }
+
+            #[cfg(windows)]
+            {
+                if let Some(pid) = child.id() {
+                    let _ = tokio::process::Command::new("taskkill")
+                        .args(["/PID", &pid.to_string(), "/T", "/F"])
+                        .status()
+                        .await;
+                }
+                let _ = timeout(Duration::from_secs(5), child.wait()).await;
+            }
+
+            self.state = ProcessState::Exited {
+                exited_at: Instant::now(),
+            };
+        }
+        Ok(())
+    }
+
+    pub fn get_logs(&self) -> (String, String) {
+        let stdout = if let Ok(buffer) = self.stdout_log.lock() {
+            buffer.tail().0
+        } else {
+            String::new()
+        };
+
+        let stderr = if let Ok(buffer) = self.stderr_log.lock() {
+            buffer.tail().0
+        } else {
+            String::new()
+        };
+
+        (stdout, stderr)
+    }
+}
