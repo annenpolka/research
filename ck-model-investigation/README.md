@@ -8,7 +8,63 @@
 
 ## 調査結果：対応モデル
 
-ckは**3つの埋め込みモデル**をサポートしています。すべてローカルで動作し、外部サービスへのネットワーク呼び出しは不要です。
+ckは**4つの埋め込みモデル**をサポートしています。すべてローカルで動作し、外部サービスへのネットワーク呼び出しは不要です。
+
+### モデル名のハードコーディング状況
+
+**結論：モデル名はハードコードされています**
+
+ソースコード分析の結果、以下が判明しました：
+
+#### 実装の詳細（`ck-models/src/lib.rs`）
+
+```rust
+// ModelConfig構造体で各モデルの仕様を定義
+pub struct ModelConfig {
+    pub name: String,           // モデルの正式名称
+    pub provider: String,       // プロバイダー（fastembed等）
+    pub dimensions: usize,      // 埋め込みベクトルの次元数
+    pub max_tokens: usize,      // 処理可能な最大トークン数
+    pub description: String,    // モデルの説明文
+}
+
+// HashMap<String, ModelConfig>でモデルを管理
+models.insert("bge-small".to_string(), ModelConfig { ... });
+models.insert("minilm".to_string(), ModelConfig { ... });
+models.insert("nomic-v1.5".to_string(), ModelConfig { ... });
+models.insert("jina-code".to_string(), ModelConfig { ... });
+```
+
+#### FastEmbed連携（`ck-embed/src/lib.rs`）
+
+モデル名は**マッチ式で固定的に定義**されています：
+
+```rust
+match model_name {
+    "BAAI/bge-small-en-v1.5" => EmbeddingModel::BGESmallENV15,
+    "nomic-embed-text-v1.5" => EmbeddingModel::NomicEmbedTextV15,
+    "jina-embeddings-v2-base-code" => EmbeddingModel::JinaEmbeddingsV2BaseCode,
+    _ => EmbeddingModel::NomicEmbedTextV15  // デフォルトフォールバック
+}
+```
+
+#### 設定の柔軟性
+
+**部分的に設定可能**です：
+
+1. **JSONファイルからの読み込み**: `ModelRegistry::load(path)` メソッドでJSONから設定を読み込める
+2. **プロジェクト単位の設定**: `ProjectConfig` で使用モデルを指定できる
+3. **制限事項**: 新しいモデルを追加するには**ソースコードの変更が必要**
+
+#### カスタムモデル追加の難易度
+
+**高い**。以下の変更が必要：
+- `ck-models/src/lib.rs` の HashMap にモデルを追加
+- `ck-embed/src/lib.rs` のマッチ式に新しいパターンを追加
+- FastEmbed の `EmbeddingModel` enum に対応する値を確認
+- 再コンパイルが必要
+
+現時点では、ユーザーが独自のモデルを動的に追加する仕組みは提供されていません。
 
 ### 1. BGE-Small（デフォルト）
 
@@ -77,12 +133,31 @@ ckは**3つの埋め込みモデル**をサポートしています。すべて�
 
 **推奨用途：** コード固有の検索、APIシグネチャ、リファクタリング
 
+### 4. MiniLM（補助モデル）
+
+**技術仕様：**
+- モデル名：sentence-transformers/all-MiniLM-L6-v2
+- モデル容量：256トークン
+- 次元数：384
+- ファイルサイズ：小型
+
+**特徴：**
+- ✅ 軽量な英語埋め込みモデル
+- ✅ 非常に高速
+- ❌ コンテキストウィンドウが最小（256トークン）
+- ❌ コード特化ではない
+
+**推奨用途：** 非常に小規模なプロジェクト、実験用途
+
+**注：** ドキュメントには3つのモデルのみ記載されていますが、ソースコードには4つ目のモデル（minilm）も定義されています。
+
 ## モデルの使用方法
 
 ### インデックス作成時にモデルを指定
 
 ```bash
 ck --index --model bge-small .
+ck --index --model minilm .
 ck --index --model nomic-v1.5 .
 ck --index --model jina-code .
 ```
@@ -187,16 +262,21 @@ cargo install ck-search
 
 ### 主な発見
 
-1. **3つの明確な選択肢**：ckは用途に応じた3つの埋め込みモデルを提供
-   - 小規模・高速：BGE-Small
+1. **4つのモデルをサポート**：ckは用途に応じた埋め込みモデルを提供
+   - 超軽量・実験用：MiniLM
+   - 小規模・高速：BGE-Small（デフォルト）
    - 大規模・ドキュメント重視：Nomic V1.5
    - コード専門：Jina Code
 
-2. **完全なローカル実行**：全モデルがローカルで動作し、プライバシーとセキュリティを確保
+2. **モデル名はハードコード**：ソースコード内でモデルが固定定義されており、カスタムモデルの追加には再コンパイルが必要
 
-3. **柔軟な統合**：FastEmbedベースの実装により、将来的な拡張性が高い
+3. **完全なローカル実行**：全モデルがローカルで動作し、プライバシーとセキュリティを確保
 
-4. **MCP対応**：最新のAIワークフローとの統合が容易
+4. **部分的な設定の柔軟性**：JSONファイルからモデル設定を読み込めるが、新規モデル追加はソースコード変更が必要
+
+5. **FastEmbed統合**：FastEmbedベースの実装だが、FastEmbedの全モデルが使えるわけではない
+
+6. **MCP対応**：最新のAIワークフローとの統合が容易
 
 ### 推奨事項
 
@@ -220,5 +300,9 @@ cargo install ck-search
 ## メタ情報
 
 - **調査日：** 2025-12-14
-- **ck バージョン：** 最新版（2025年時点）
-- **調査方法：** 公式ドキュメント、GitHub README、Web検索
+- **ck バージョン：** 最新版（2025年時点、mainブランチ）
+- **調査方法：**
+  - 公式ドキュメント分析
+  - GitHub READMEレビュー
+  - **ソースコード分析**（`ck-models/src/lib.rs`、`ck-embed/src/lib.rs`）
+  - Web検索
