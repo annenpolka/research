@@ -60,6 +60,7 @@ else:
 - **[claude-code-hooks-observability-plugin](./claude-code-hooks-observability-plugin)**: Claude Code Hooks Multi-Agent Observability システムのPlugin化プロトタイプ - 完全に実現可能で、MCPサーバー統合により元のシステムを超える機能を提供
 - **[claude-code-infrastructure-showcase](./claude-code-infrastructure-showcase)**: プロジェクトの説明
 - **[claude-code-prompt-improver-analysis](./claude-code-prompt-improver-analysis)**: Claude Code Prompt Improver - 曖昧なプロンプトを自動改善するUserPromptSubmitフック（83行のPython、会話履歴活用、リサーチベースの質問生成）
+- **[claude_code_agent_farm](./claude_code_agent_farm)**: プロジェクトの説明
 - **[github-actions-cross-repo](./github-actions-cross-repo)**: GitHub Actionsで他のリポジトリを参照する方法の調査と検証。Deploy Keys、GitHub App、PATなど複数の認証方法を比較。
 - **[japanese-to-romaji](./japanese-to-romaji)**: 日本語（漢字含む）→ローマ字変換ライブラリの比較研究：pykakasi、cutlet、romkan、jaconvを機能・精度・パフォーマンスで評価
 - **[multi-agent-coordinator](./multi-agent-coordinator)**: Claude Codeフック+Skillsベースの軽量マルチエージェント調整システム（非侵襲的、透過的ファイルロック、Gitネイティブ、Beads並行編集戦略の分析と応用）
@@ -68,6 +69,7 @@ else:
 - **[prompt-ops-research](./prompt-ops-research)**: プロンプト自動改善とPromptOpsの包括的調査: Claude Code公式機能、コミュニティツール、主要フレームワーク（DSPy、AutoPrompt、LangSmith）の実践的活用法
 - **[rails-find-or-create-block](./rails-find-or-create-block)**: ActiveRecordの`find_or_create_by!`のブロックは新規レコード作成時のみ実行され、既存レコード検索時は実行されない
 - **[rails-json-params-handling](./rails-json-params-handling)**: RailsでContent-Type: application/jsonのパラメータは型を保持し、文字列に変換されない
+- **[taskchutte-research](./taskchutte-research)**: TaskChuteの再現実装に必要な仕様調査：時間を軸としたタスク管理システムの詳細な機能・データ構造・実装ガイド
 - **[vibe-kanban-container-setup](./vibe-kanban-container-setup)**: vibe-kanban（AIエージェントオーケストレーター）を隔離されたコンテナ環境で安全に実行するための包括的なガイドと実装例。vibe-kanbanはnpx経由でエージェントCLIをコンテナ内で自動実行。ユーザーはAPI keyのみ必要でエージェントのインストールは不要。
 <!-- [[[end]]] -->
 
