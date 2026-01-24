@@ -61,6 +61,7 @@ else:
 - **[claude-code-infrastructure-showcase](./claude-code-infrastructure-showcase)**: プロジェクトの説明
 - **[claude-code-prompt-improver-analysis](./claude-code-prompt-improver-analysis)**: Claude Code Prompt Improver - 曖昧なプロンプトを自動改善するUserPromptSubmitフック（83行のPython、会話履歴活用、リサーチベースの質問生成）
 - **[claude_code_agent_farm](./claude_code_agent_farm)**: プロジェクトの説明
+- **[clawdbot-investigation](./clawdbot-investigation)**: **Clawdbot**は、**個人用AIアスタント**をセルフホストして運用するためのオープンソースツールです。WhatsApp、Telegram、Slack、Discord、Signal、iMessageなど、普段使っている**複数のメッセージングチャンネル**からAIアシスタントと会話できます。 - リポジトリ: https://github.com/clawdbot/clawdbot
 - **[github-actions-cross-repo](./github-actions-cross-repo)**: GitHub Actionsで他のリポジトリを参照する方法の調査と検証。Deploy Keys、GitHub App、PATなど複数の認証方法を比較。
 - **[hookify-plugin-analysis](./hookify-plugin-analysis)**: **Hookify**は、Claude Codeの公式プラグインで、会話パターンの分析や明示的な指示から、望まない動作を防ぐためのカスタムフックを簡単に作成できるツールです。 - **リポジトリ**: https://github.com/anthropics/claude-code/tree/main/plugins/hookify
 - **[japanese-to-romaji](./japanese-to-romaji)**: 日本語（漢字含む）→ローマ字変換ライブラリの比較研究：pykakasi、cutlet、romkan、jaconvを機能・精度・パフォーマンスで評価
