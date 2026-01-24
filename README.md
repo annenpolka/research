@@ -62,6 +62,7 @@ else:
 - **[claude-code-prompt-improver-analysis](./claude-code-prompt-improver-analysis)**: Claude Code Prompt Improver - 曖昧なプロンプトを自動改善するUserPromptSubmitフック（83行のPython、会話履歴活用、リサーチベースの質問生成）
 - **[claude_code_agent_farm](./claude_code_agent_farm)**: プロジェクトの説明
 - **[github-actions-cross-repo](./github-actions-cross-repo)**: GitHub Actionsで他のリポジトリを参照する方法の調査と検証。Deploy Keys、GitHub App、PATなど複数の認証方法を比較。
+- **[hookify-plugin-analysis](./hookify-plugin-analysis)**: **Hookify**は、Claude Codeの公式プラグインで、会話パターンの分析や明示的な指示から、望まない動作を防ぐためのカスタムフックを簡単に作成できるツールです。 - **リポジトリ**: https://github.com/anthropics/claude-code/tree/main/plugins/hookify
 - **[japanese-to-romaji](./japanese-to-romaji)**: 日本語（漢字含む）→ローマ字変換ライブラリの比較研究：pykakasi、cutlet、romkan、jaconvを機能・精度・パフォーマンスで評価
 - **[multi-agent-coordinator](./multi-agent-coordinator)**: Claude Codeフック+Skillsベースの軽量マルチエージェント調整システム（非侵襲的、透過的ファイルロック、Gitネイティブ、Beads並行編集戦略の分析と応用）
 - **[multi-agent-maildeck](./multi-agent-maildeck)**: MailDeck: 非侵襲な多エージェント制御層（Beads + MCP Agent Mail + Claude Hooks）構想と実装ExecPlan。
