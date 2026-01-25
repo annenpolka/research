@@ -71,6 +71,7 @@ else:
 - **[prompt-ops-research](./prompt-ops-research)**: プロンプト自動改善とPromptOpsの包括的調査: Claude Code公式機能、コミュニティツール、主要フレームワーク（DSPy、AutoPrompt、LangSmith）の実践的活用法
 - **[rails-find-or-create-block](./rails-find-or-create-block)**: ActiveRecordの`find_or_create_by!`のブロックは新規レコード作成時のみ実行され、既存レコード検索時は実行されない
 - **[rails-json-params-handling](./rails-json-params-handling)**: RailsでContent-Type: application/jsonのパラメータは型を保持し、文字列に変換されない
+- **[superpowers-research](./superpowers-research)**: **Superpowers**は、AIコーディングエージェント（Claude Code、Codex、OpenCode）向けの包括的なスキルライブラリとワークフローシステムです。ソフトウェア開発のベストプラクティスを「スキル」として構造化し、エージェントがコードを書く前、書いている間、書いた後に適用できるようにしています。 - **作者**: Jesse Vincent (obra)
 - **[taskchutte-research](./taskchutte-research)**: TaskChuteの再現実装に必要な仕様調査：時間を軸としたタスク管理システムの詳細な機能・データ構造・実装ガイド
 - **[vibe-kanban-container-setup](./vibe-kanban-container-setup)**: vibe-kanban（AIエージェントオーケストレーター）を隔離されたコンテナ環境で安全に実行するための包括的なガイドと実装例。vibe-kanbanはnpx経由でエージェントCLIをコンテナ内で自動実行。ユーザーはAPI keyのみ必要でエージェントのインストールは不要。
 <!-- [[[end]]] -->
