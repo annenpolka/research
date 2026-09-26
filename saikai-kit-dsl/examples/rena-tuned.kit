@@ -1,0 +1,41 @@
+# 技ごとにまとめて調整する例。値はどれも説明のための仮のもので、決定ではない。
+# kitc はここから SAIKAI_INERTIA・SAIKAI_AMMO・SAIKAI_CANCEL・SAIKAI_AIR・SAIKAI_STEP・SAIKAI_BOOST_COST・SAIKAI_HP の行を組み立てる。
+
+kit rena
+for play
+hp 12000                                        ?      # SAIKAI_HP の rena=（キャラクターの耐久値）
+
+メイン
+  inertia  move                                        # 移動撃ち（on の表と同じ）
+  ammo     constant/6/180/120                          # 常時リロード、6 発、180F、撃ち切り 120F
+  shots    nata.shot nata.lever_shot nata.air_shot     # この 3 つの弾のあとだけ同時押しで打ち切れる
+
+サブ
+  inertia  stop:60/80/85 cap=-/4.0mbon          ?U60   # 縦の上限は MBON の長さ 4.0（×20/3 で原作の長さへ）
+  ammo     depleted/3/240/180                   ?U43
+  cancel   main
+  air      keep                                        # 空中では空中射撃 402 を残す
+  boost    whole:30                             ?
+
+特射
+  cancel   main dry                                    # 弾切れの空撃ちのメインからも打ち切る
+  boost    whole:30                             ?
+
+特格
+  perf     nata.air_dash_melee                  ?      # 旧AD格と比べる（special_melee=ad）
+  cancel   none                                        # メインからは出ない
+  inertia  own
+
+下格
+  perf     axe.shot / axe.air_shot              !J50
+  rainbow  air                                  !J61   # 下格闘からの虹ステは空中扱い（既定と同じ）
+
+system
+  step        shot=keep
+  loco        parts=bd air=on blend=7
+  boost_cost
+  air
+  inertia     file=rena-tuned.inertia.txt              # ファイルにすると戦闘中も 30 更新ごとに読み直す
+  charge
+  cancel
+  ammo

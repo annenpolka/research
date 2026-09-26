@@ -1,0 +1,32 @@
+# レナの「遊びの設定」をそのまま紙にしたもの。
+# 出典：daybreak-saikai experiments/down-melee-axe.md の「遊びの設定」（効果のファイル・ワイド・HUD を除く）。
+# kitc で訳すと、記録にある 20 個の SAIKAI_* とまったく同じになる（tests/test_kitc.py）。
+
+kit rena                                        # ベースは鉈（0:0）。キットの名前がベースを決める（J77 と同じ流儀）
+for play                                        # 手で遊ぶ。印の無い値も通す（数えるだけ）
+
+特格
+  perf  iron.slide_melee                        !J9    # 鉄塊鉈のスライド格闘を借りる（キットの既定）
+
+下格
+  perf  axe.shot / axe.air_shot                 !J50   # 斧レナのメイン「粉砕」、弾数無し
+
+system
+  step        shot=keep
+  loco        parts=bd air=on blend=7
+  boost_cost
+  guard
+  melee       side=on
+  landing
+  ukemi
+  homing      muzzle=aim
+  lock
+  air
+  inertia
+  charge
+  cancel
+  combo
+  react       getup=on
+  body
+  ammo
+  camera

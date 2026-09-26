@@ -1,0 +1,13 @@
+[package]
+name = "kitc-oracle"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+# saikai-rules from a checkout of daybreak-saikai at the vocabulary's commit
+# (oracle/run.sh clones it into ../.saikai). Only saikai-rules: saikai-runtime
+# needs Kakera's Windows-only runtime and does not build off Windows.
+[dependencies]
+saikai-rules = { path = "../.saikai/crates/saikai-rules" }
+
+[workspace]

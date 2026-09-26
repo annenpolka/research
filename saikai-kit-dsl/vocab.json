@@ -1,0 +1,153 @@
+{
+  "source": {
+    "repo": "https://gitlab.com/hidebu-reiwa/daybreak-saikai",
+    "commit": "abe253c93054f54e185b6d4b52312b3149c4ae11",
+    "note": "Hand-written snapshot of saikai's vocabulary. The *_on tables and layer_defaults were printed by oracle/ (saikai-rules' own parsers and to_text); the rest was read from crates/saikai-runtime/src/{perf,class,kit,loco,step_hook}.rs and crates/saikai-rules/src/experiment.rs."
+  },
+  "bases": {
+    "rena": {
+      "class": "0:0",
+      "name": "rena_nata",
+      "character": "rena",
+      "layers": ["kit", "s0", "borrow", "step", "loco", "step_fx", "step_ghost", "bd_fx", "boost_cost", "landing", "air", "inertia", "body", "guard", "ukemi", "react", "melee", "charge", "cancel", "ammo", "homing", "camera", "gauge"],
+      "mains": ["nata.shot", "nata.lever_shot", "nata.slide_shot_right", "nata.slide_shot_left", "nata.air_dash_shot", "nata.air_shot"],
+      "melees": ["nata.melee", "nata.front_melee", "nata.side_melee", "nata.air_melee", "nata.dash_melee", "nata.slide_melee", "nata.landing_melee"]
+    },
+    "mion": {
+      "class": "1:1",
+      "name": "mion_water",
+      "character": "mion",
+      "layers": ["kit", "s0", "charge", "cancel", "loco", "boost_cost"],
+      "mains": ["water.shot", "water.slide_shot_right", "water.slide_shot_left", "water.backstep_shot", "water.air_shot"],
+      "melees": ["water.melee", "water.front_melee", "water.side_melee", "water.air_melee", "water.dash_melee", "water.slide_melee", "water.landing_melee"]
+    }
+  },
+  "research_knobs": ["SAIKAI_S0", "SAIKAI_TUNE", "SAIKAI_S1_MASK"],
+  "slot_free_layers": ["commands", "lock", "combo", "hp", "hud", "hud_redraw", "friendly", "widescreen", "camera", "homing"],
+  "perfs": {
+    "nata.backstep_shot": {"class": "0:0"},
+    "nata.air_shot": {"class": "0:0"},
+    "nata.full_charge_shot": {"class": "0:0"},
+    "nata.air_full_charge_shot": {"class": "0:0"},
+    "nata.air_dash_melee": {"class": "0:0"},
+    "iron.slide_melee": {"class": "0:2", "borrowed_onto": ["0:0"]},
+    "iron.shot": {"class": "0:2", "borrowed_onto": ["0:0"]},
+    "axe.shot": {"class": "0:1", "borrowed_onto": ["0:0"]},
+    "axe.air_shot": {"class": "0:1", "borrowed_onto": ["0:0"]},
+    "nata.melee": {"class": "0:0"},
+    "nata.front_melee": {"class": "0:0"},
+    "nata.side_melee": {"class": "0:0"},
+    "nata.air_melee": {"class": "0:0"},
+    "nata.dash_melee": {"class": "0:0"},
+    "nata.slide_melee": {"class": "0:0"},
+    "nata.landing_melee": {"class": "0:0"},
+    "nata.ex": {"class": "0:0"},
+    "nata.shot": {"class": "0:0"},
+    "nata.lever_shot": {"class": "0:0"},
+    "nata.slide_shot_right": {"class": "0:0"},
+    "nata.slide_shot_left": {"class": "0:0"},
+    "nata.air_dash_shot": {"class": "0:0"},
+    "nata.charge_shot": {"class": "0:0"},
+    "nata.air_charge_shot": {"class": "0:0"},
+    "water.melee": {"class": "1:1"},
+    "water.front_melee": {"class": "1:1"},
+    "water.side_melee": {"class": "1:1"},
+    "water.air_melee": {"class": "1:1"},
+    "water.dash_melee": {"class": "1:1"},
+    "water.slide_melee": {"class": "1:1"},
+    "water.landing_melee": {"class": "1:1"},
+    "water.ex": {"class": "1:1"},
+    "water.shot": {"class": "1:1"},
+    "water.slide_shot_right": {"class": "1:1"},
+    "water.slide_shot_left": {"class": "1:1"},
+    "water.backstep_shot": {"class": "1:1"},
+    "water.air_shot": {"class": "1:1"},
+    "water.charge_shot": {"class": "1:1"},
+    "water.air_charge_shot": {"class": "1:1"},
+    "water.full_charge_shot": {"class": "1:1"},
+    "water.air_full_charge_shot": {"class": "1:1"}
+  },
+  "perf_all": ["nata.backstep_shot", "nata.air_shot", "nata.full_charge_shot", "nata.air_full_charge_shot", "nata.air_dash_melee", "iron.slide_melee", "iron.shot", "axe.shot", "axe.air_shot", "nata.melee", "nata.front_melee", "nata.side_melee", "nata.air_melee", "nata.dash_melee", "nata.slide_melee", "nata.landing_melee", "nata.ex", "nata.shot", "nata.lever_shot", "nata.slide_shot_right", "nata.slide_shot_left", "nata.air_dash_shot", "nata.charge_shot", "nata.air_charge_shot"],
+  "max_donor_classes": 2,
+  "kits": {
+    "rena": {
+      "fixed": {
+        "sub_shot": ["nata.backstep_shot", "nata.air_shot"],
+        "special_shot": ["nata.full_charge_shot", "nata.air_full_charge_shot"],
+        "charge_shot": ["nata.charge_shot", "nata.air_charge_shot"]
+      },
+      "choices": {
+        "special_melee": {
+          "iron.slide_melee": "slide",
+          "iron.shot": "iron400",
+          "nata.air_dash_melee": "ad"
+        },
+        "down_melee": {
+          "axe.shot/axe.air_shot": "axe_main"
+        }
+      },
+      "defaults": {"special_melee": "slide", "down_melee": "off"}
+    },
+    "mion": {
+      "fixed": {
+        "charge_shot": ["water.charge_shot", "water.air_charge_shot"]
+      },
+      "choices": {},
+      "defaults": {}
+    }
+  },
+  "kit_moves": ["sub_shot", "special_shot", "special_melee", "charge_shot", "down_melee"],
+  "ammo_rows": ["main", "sub_shot", "special_shot", "special_melee"],
+  "cancel_to": ["sub_shot", "special_shot", "special_melee", "down_melee"],
+  "inertia_on": "default=stop:50/92/94;nata.ex=own;melee=own;main=move;turn_around=stop:100/92/95;sub_shot=stop:100/95/95 cap=-/26.666667;special_shot=stop:100/95/95;special_melee=stop:100/95/97;charge_shot=stop:50/92/94;down_melee=own",
+  "boost_cost_on": "default=carry;nata.charge_shot=whole:30;nata.air_charge_shot=whole:30;water.charge_shot=whole:30;water.air_charge_shot=whole:30",
+  "step_rainbow_air_default": ["axe.shot", "axe.air_shot"],
+  "length_scale": [20, 3],
+  "characters": ["rena", "mion", "keiichi", "satoko", "rika", "shion", "tomitake", "takano", "ohishi", "akasaka", "irie", "chie", "kasai", "akane", "hanyu", "natumi"],
+  "layers": {
+    "commands": {"keys": []},
+    "kit": {"keys": []},
+    "step": {"keys": ["scale", "rainbow_after", "buffer", "tail", "aim", "follow", "shot", "rainbow_air", "rainbow_green"]},
+    "loco": {"keys": ["parts", "vscale", "near", "air", "blend", "rear"], "needs": ["step"]},
+    "air": {"keys": ["keep", "blend", "land"]},
+    "inertia": {"keys": [], "form": "table"},
+    "boost_cost": {"keys": [], "form": "table", "needs": ["loco"]},
+    "charge": {"keys": ["full", "drain", "cancel"], "needs": ["commands"]},
+    "cancel": {"keys": ["from", "to", "empty", "except"], "needs": ["commands", "kit"]},
+    "ammo": {"keys": ["main", "sub_shot", "special_shot", "special_melee", "empty"], "needs": ["commands", "kit"]},
+    "melee": {"keys": ["scale", "bodies", "red", "cut", "vertical", "pitch", "side", "side_pose", "side_blend", "green"]},
+    "guard": {"keys": ["scale", "buffer", "hold_max", "arc"], "needs": ["commands"]},
+    "landing": {"keys": ["lock", "length", "extend", "slide", "refill", "buffer", "guard_buffer", "motion", "rise"]},
+    "ukemi": {"keys": ["wait", "invincible", "boost"]},
+    "react": {"keys": ["scale", "kit", "getup", "landguard", "kind"]},
+    "homing": {"keys": ["turn", "early", "cone", "near", "delay", "time", "lock", "elev", "cut", "trace", "muzzle"]},
+    "lock": {"keys": ["red", "red.*", "elev", "keep", "reticle", "trace"]},
+    "combo": {"keys": ["floor", "reset", "shot", "melee", "down", "melee*", "shot*"], "form": "comma"},
+    "hp": {"keys": ["unit"], "form": "hp"},
+    "camera": {"keys": ["slots", "display", "walk", "eye", "scale", "trace", "fov", "view", "back", "rise", "rise_near", "drop", "drop_near", "drop_far", "center", "look"]},
+    "body": {"keys": ["blend", "end", "air", "twist"]},
+    "hud": {"keys": [], "form": "free"},
+    "hud_redraw": {"keys": ["right", "bottom", "gap", "cs", "ammo", "partner", "portrait", "partner_bar", "burst", "burst_x", "burst_y"]},
+    "friendly": {"keys": [], "form": "free"},
+    "widescreen": {"keys": [], "form": "free"},
+    "step_fx": {"keys": [], "form": "free"},
+    "step_ghost": {"keys": [], "form": "free"},
+    "bd_fx": {"keys": [], "form": "free"},
+    "gauge": {"keys": [], "form": "free"}
+  },
+  "layer_defaults": {
+    "step": "on scale=20/3 rainbow_after=15 buffer=12 tail=on aim=on follow=100 rainbow_air=axe.shot+axe.air_shot shot=cancel rainbow_green=allow",
+    "loco": "on parts=bd vscale=20/3 near=off",
+    "air": "on",
+    "charge": "on full=120 drain=90 cancel=nata.melee,nata.front_melee,nata.side_melee,nata.air_melee,nata.dash_melee,nata.slide_melee,nata.landing_melee,borrowed,ukemi,fall",
+    "cancel": "on from=nata.shot,nata.lever_shot,nata.slide_shot_right,nata.slide_shot_left,nata.air_dash_shot,nata.air_shot to=sub_shot,special_shot,special_melee,down_melee empty=block except=none",
+    "ammo": "on main=constant/6/180/120 sub_shot=depleted/3/240/180 special_shot=constant/2/300/200 special_melee=none empty=dry",
+    "melee": "on scale=20/3 bodies=53 red=2400 cut=on vertical=on pitch=on side=off side_pose=run side_blend=4 green=native",
+    "guard": "on scale=20/3 buffer=15 hold_max=120 arc=mbon",
+    "landing": "on lock=20 length=40 extend=on slide=on refill=on buffer=5 guard_buffer=15 motion=hold rise=19",
+    "ukemi": "on wait=48 scale=20/3 invincible=on boost=5000",
+    "react": "on scale=20/3 kit=on",
+    "homing": "on turn=0.8000/0.6000 early=7@125 cone=70.0000/50.0000 near=233 delay=1 time=none lock=2400 elev=57.0000/-57.0000 cut=on trace=off",
+    "body": "on blend=5 end=20 air=on twist=on"
+  }
+}

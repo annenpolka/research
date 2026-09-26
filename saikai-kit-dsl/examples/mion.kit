@@ -1,0 +1,13 @@
+# 魅音（特注の水鉄砲 1:1）の今の土台。水鉄砲に入っている層だけを書ける（J77）。
+
+kit mion
+for play
+
+射CS
+  perf     water.charge_shot / water.air_charge_shot   # キットの既定（水鉄砲の CS）
+
+system
+  loco        parts=bd air=on blend=7                  # STEP=on は kitc が足す（loco を運ぶため）
+  boost_cost
+  charge
+  cancel
