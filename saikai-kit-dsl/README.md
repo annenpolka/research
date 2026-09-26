@@ -18,7 +18,7 @@
 - ユーザーがいま手で遊んでいる設定（環境変数 20 個）は、32 行の紙で書けた。訳した結果は記録と完全に一致した。
 - 訳した値は、saikai-rules の本物のパーサーにすべて受理された。
 
-レナのキットの今の作りを追った記録は [notes/rena-kit-current.md](notes/rena-kit-current.md) にある。
+レナのキットの今の作りを追った記録は [notes/rena-kit-current.md](notes/rena-kit-current.md)、技と弾を個別に調整する見通しは [notes/per-move-and-shot-tuning.md](notes/per-move-and-shot-tuning.md) にある。
 
 ## 動機
 
