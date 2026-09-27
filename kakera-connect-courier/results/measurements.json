@@ -1,0 +1,103 @@
+{
+  "note": "loopback-only kakera-connect, local mailbox; not a WAN observation",
+  "pair": [
+    {
+      "short_code_chars": 20,
+      "invite_chars": 646,
+      "answer_chars": 712,
+      "typed_to_verified_s": 0.425,
+      "typed_to_connected_s": 1.45
+    },
+    {
+      "short_code_chars": 19,
+      "invite_chars": 656,
+      "answer_chars": 706,
+      "typed_to_verified_s": 0.383,
+      "typed_to_connected_s": 1.406
+    },
+    {
+      "short_code_chars": 18,
+      "invite_chars": 657,
+      "answer_chars": 714,
+      "typed_to_verified_s": 0.408,
+      "typed_to_connected_s": 1.432
+    },
+    {
+      "short_code_chars": 18,
+      "invite_chars": 652,
+      "answer_chars": 712,
+      "typed_to_verified_s": 0.445,
+      "typed_to_connected_s": 1.468
+    },
+    {
+      "short_code_chars": 19,
+      "invite_chars": 649,
+      "answer_chars": 713,
+      "typed_to_verified_s": 0.435,
+      "typed_to_connected_s": 1.461
+    }
+  ],
+  "room": [
+    {
+      "short_code_chars": [
+        16,
+        17,
+        17
+      ],
+      "invite_chars": [
+        698,
+        695,
+        698
+      ],
+      "answer_chars": [
+        803,
+        805,
+        815
+      ],
+      "typed_to_connected_s": 2.689
+    },
+    {
+      "short_code_chars": [
+        21,
+        19,
+        16
+      ],
+      "invite_chars": [
+        693,
+        697,
+        689
+      ],
+      "answer_chars": [
+        803,
+        813,
+        805
+      ],
+      "typed_to_connected_s": 2.637
+    },
+    {
+      "short_code_chars": [
+        18,
+        18,
+        18
+      ],
+      "invite_chars": [
+        695,
+        698,
+        693
+      ],
+      "answer_chars": [
+        813,
+        806,
+        810
+      ],
+      "typed_to_connected_s": 2.659
+    }
+  ],
+  "pair_typed_to_connected_median_s": 1.45,
+  "room_typed_to_connected_median_s": 2.659,
+  "wan_invite_estimate": {
+    "loopback_invite_chars": 646,
+    "estimated_wan_invite_chars": 808,
+    "candidate_lines": 12
+  }
+}
