@@ -8,14 +8,14 @@
 
 **キーワード、コマンド名、項目名、列挙値、参照用IDは英語のASCII表記に統一する。** 日本語の構文別名は設けない。日本語は説明文、コメント、引用符で囲んだ表示ラベル、ファイルパスなどの文字列データに残せる。表示ラベルを技IDや入力名として解釈しない。
 
-コマンドの正規名は `main`、`melee`、`sub_shot`、`special_shot`、`special_melee`、`charge_shot`、`down_melee`。システム入力の設計例は `step` を使うが、v0の技見出しへ追加する意味ではない。旧表記からの移行は [READMEの対応表](../README.md#文法の英語表記)を参照。
+コマンドの正規名は `main_shot`、`neutral_melee`、`side_melee`、`sub_shot`、`special_shot`、`special_melee`、`charge_shot`、`down_melee`。システム入力の設計例は `step` を使うが、v0の技見出しへ追加する意味ではない。旧表記からの移行は [READMEの対応表](../README.md#文法の英語表記)を参照。
 
 ```text
 format 1
 kit rena extends=saikai.rena
 for play
 
-main
+main_shot
   ammo constant capacity=6 reload=180f burst_reload=120f ?
   motion move
 
@@ -56,6 +56,39 @@ bind special_shot -> boomerang
 `sub_shot` だけの見出しは固定基底で一意な技へ解決する。方向や形態で複数に分かれる場合は技IDを要求する。同一ファイル内の配置変更を見出しの解決に順次反映させない。
 
 bindingを宣言したcommandは、その層の宣言集合で基底の集合を置き換える。条件が重複すればエラー。一つの明示的な `otherwise` は認める。行順・暗黙の詳細条件優先は使わない。移動元commandの解除は別途明示する。
+
+### 2.1 主射撃と方向別格闘コマンド
+
+| Command | 意味 | 一括して含めないもの |
+|---|---|---|
+| `main_shot` | 主射撃 | `special_shot` や `charge_shot` |
+| `neutral_melee` | N格闘 | 横格・前格・BD格など格闘全般 |
+| `side_melee` | 横格闘（左右） | N格・ステップ格闘・単なる横移動 |
+
+`neutral_melee` と `side_melee` は独立したCommand。どちらも地上/空中の区別とは直交し、姿勢ごとの演目・性能は各MoveDefで決める。物理入力と方向からどちらを認識するか、前格・下格・BD格等との競合優先順は共通rules/controllerの契約であり、この改名でゲーム側の認識規則を変えない。
+
+`side_melee` は左右をまとめた入力種別だが、左右方向の情報は認識時のpayloadに残す。左右共通なら一つのbinding、異なる技なら `lever=left` / `lever=right` の条件で分ける。`neutral_melee lever=left` のようなコマンドと矛盾する条件は拒否し、片方を優先して読み替えない。方向の基準座標や斜め入力の扱いは固定rulesetに従う。
+
+次は独立した調整とキャンセルの構造例（未実装、固定基底に各技がある前提。性能値は提案）：
+
+```text
+neutral_melee neutral_slash "N格闘"
+  frames recovery=12f ?
+
+side_melee lateral_slash "横格闘"
+  frames recovery=16f ?
+
+bind main_shot -> primary_fire
+move primary_fire
+  cancel to-neutral into=neutral_slash input=neutral_melee from=18f before=move_end
+  cancel to-side into=lateral_slash input=side_melee from=22f before=move_end
+```
+
+`input=` はCommand、`into=` はMoveIdで、同じ名前空間ではない。両格闘を同じ演目で演じる場合も、定義・実行元・受付窓を同一化しない。一方の調整を他方へ広げるbackendでは、その要求を拒否する。
+
+旧コマンド `main` は `main_shot` へ移行し、互換別名にはしない。旧 `melee` は格闘全般だったので、N格への単純な改名は禁止する。対象を見直して各技へ分ける。全格闘に共通の設定が必要な場合も、N格という名前に押し込まず、将来の明示的な共通設定機構で扱う。
+
+v0では `main_shot` を既存backendの `main` キーへ変換する。N格/横格の方向別接続はまだ実装していないため、両見出しの性能指定は `unsupported_command_split` で拒否する。名前の区別を追加したことを、個別のゲーム動作の実装済み宣言にしない。`system` の層名 `melee`、既存環境変数のキー、PerfIdの `nata.melee` 等はこの命名変更の対象外。
 
 ## 3. 資源
 
@@ -126,13 +159,13 @@ move volley entry=first
   stage first
     perf ground=sample.shot air=sample.air_shot
     spend ammo amount=1 at=fire:first
-    followup into=stage(second) input=main from=fire:first+2f before=stage_end
+    followup into=stage(second) input=main_shot from=fire:first+2f before=stage_end
     cancel escape into=retreat input=special_melee from=fire:first+2f before=stage_end
 
   stage second
     perf ground=sample.shot air=sample.air_shot
     spend ammo amount=1 at=fire:first
-    followup into=stage(third) input=main from=fire:first+2f before=stage_end
+    followup into=stage(third) input=main_shot from=fire:first+2f before=stage_end
     cancel escape into=retreat input=special_melee from=fire:first+2f before=stage_end
 
   stage third

@@ -44,8 +44,9 @@ VOCAB_PATH = Path(__file__).with_name("vocab.json")
 # Syntax uses English/ASCII words. Japanese remains valid in comments and data.
 
 MOVE_ALIASES = {
-    "main": "main",
-    "melee": "melee",
+    "main_shot": "main_shot",
+    "neutral_melee": "neutral_melee",
+    "side_melee": "side_melee",
     "sub_shot": "sub_shot",
     "special_shot": "special_shot",
     "special_melee": "special_melee",
@@ -54,7 +55,12 @@ MOVE_ALIASES = {
     "down_melee": "down_melee",
 }
 # The weapon rows that are not kit moves: the original's controller plays them.
-WEAPON_ROWS = ("main", "melee")
+WEAPON_ROWS = ("main_shot", "neutral_melee", "side_melee")
+DIRECTIONAL_MELEE = ("neutral_melee", "side_melee")
+
+# Public commands and the frozen backend vocabulary have different namespaces.
+# Never collapse the two directional melee commands into the old aggregate row.
+LEGACY_WEAPON_KEYS = {"main_shot": "main"}
 
 PROP_ALIASES = {
     "perf": "perf",
@@ -74,8 +80,8 @@ HEADER_ALIASES = {
 
 # Migration hints only: these spellings are rejected, never normalized.
 JAPANESE_MIGRATIONS = {
-    "メイン": "main",
-    "格闘": "melee",
+    "メイン": "main_shot",
+    "格闘": "neutral_melee / side_melee",
     "サブ": "sub_shot",
     "特射": "special_shot",
     "特格": "special_melee",
@@ -175,6 +181,11 @@ def read_lines(text: str) -> list[tuple[int, bool, list[str], str | None]]:
         words = body.split()
         if words[0] in JAPANESE_MIGRATIONS:
             replacement = JAPANESE_MIGRATIONS[words[0]]
+            if words[0] == "格闘":
+                raise KitError(
+                    f"{no} 行目：`格闘` は格闘全般の旧名。"
+                    "`neutral_melee` / `side_melee` を対象に応じて選ぶ（単純置換しない）"
+                )
             raise KitError(
                 f"{no} 行目：日本語の構文語 `{words[0]}` は使えない。`{replacement}` に置き換える"
             )
@@ -210,6 +221,13 @@ def parse(text: str) -> Sheet:
             continue
         current = None
         head = words[0]
+        if head == "main":
+            raise KitError(f"{no} 行目：技の見出し `main` は廃止。`main_shot` に置き換える")
+        if head == "melee":
+            raise KitError(
+                f"{no} 行目：技の見出し `melee` は格闘全般の旧名。"
+                "`neutral_melee` / `side_melee` を対象に応じて選ぶ（単純置換しない）"
+            )
         if head == "kit":
             if sheet.kit or len(words) != 2:
                 raise KitError(f"{no} 行目：`kit <name>` は 1 回だけ")
@@ -369,6 +387,12 @@ class Compiler:
                     self.raw[line.words[0]] = (line, " ".join(line.words[1:]))
 
     def collect_move(self, block: Block) -> None:
+        if block.name in DIRECTIONAL_MELEE and block.lines:
+            raise KitError(
+                f"{block.lines[0].where()}：`{block.name}` の方向別設定は v0 未対応"
+                "（unsupported_command_split）。controller の方向別役割と演目集合を"
+                "接続する必要がある。格闘全般の `melee` へまとめて出力しない"
+            )
         move = Move(block.name, block)
         self.moves[block.name] = move
         seen = set()
@@ -603,15 +627,17 @@ class Compiler:
 
     def compile_ammo(self) -> None:
         for name, _, line in self.move_lines("ammo"):
-            if name not in self.v["ammo_rows"]:
-                raise KitError(f"{line.where()}：弾倉を持てるのは {', '.join(self.v['ammo_rows'])}（`{name}` は無い）")
+            key = LEGACY_WEAPON_KEYS.get(name, name)
+            if key not in self.v["ammo_rows"]:
+                public_rows = ["main_shot" if row == "main" else row for row in self.v["ammo_rows"]]
+                raise KitError(f"{line.where()}：弾倉を持てるのは {', '.join(public_rows)}（`{name}` は無い）")
             value = " ".join(line.words[1:])
             if not MAG_RE.match(value):
                 raise KitError(f"{line.where()}：弾倉は `<constant|depleted|never|manual>/<capacity>/<reload>[/<burst_reload>]…` か `none`")
-            if name == "main" and ("/hold" in value or value.startswith("manual")):
+            if name == "main_shot" and ("/hold" in value or value.startswith("manual")):
                 raise KitError(f"{line.where()}：メインの弾倉に hold・manual は使えない")
             if self.require("ammo", line, "ammo"):
-                self.set_key("ammo", name, value, line)
+                self.set_key("ammo", key, value, line)
                 self.note_line("SAIKAI_AMMO", f"{name}={value}", line)
 
     def compile_cancel(self) -> None:
@@ -621,22 +647,27 @@ class Compiler:
         touched = False
         for name, _, line in self.move_lines("cancel"):
             words = line.words[1:]
+            if words and words[0] == "main":
+                raise KitError(
+                    f"{line.where()}：`cancel main` は廃止。"
+                    "`cancel main_shot` に置き換える（`dry` はそのまま）"
+                )
             if name not in to_all:
                 raise KitError(f"{line.where()}：メインを打ち切れるのは {', '.join(to_all)}")
-            if words == ["main"]:
+            if words == ["main_shot"]:
                 member[name], dry[name] = True, False
-            elif words == ["main", "dry"]:
+            elif words == ["main_shot", "dry"]:
                 member[name], dry[name] = True, True
             elif words == ["none"]:
                 member[name], dry[name] = False, False
             else:
-                raise KitError(f"{line.where()}：`cancel main`・`cancel main dry`・`cancel none` のどれか")
+                raise KitError(f"{line.where()}：`cancel main_shot`・`cancel main_shot dry`・`cancel none` のどれか")
             if self.require("cancel", line, "cancel"):
                 touched = True
                 self.note_line("SAIKAI_CANCEL", f"{name}: {' '.join(words)}", line)
         for name, _, line in self.move_lines("shots"):
-            if name != "main":
-                raise KitError(f"{line.where()}：`shots` は `main` の見出しにだけ書く（キャンセルできるメインの演目）")
+            if name != "main_shot":
+                raise KitError(f"{line.where()}：`shots` は `main_shot` の見出しにだけ書く（キャンセルできるメインの演目）")
             shots = line.words[1:]
             for s in shots:
                 if s not in self.base["mains"]:
@@ -706,7 +737,7 @@ class Compiler:
         for name, _, line in self.move_lines("inertia"):
             text = carry(line.words[1:], self.v, line.where())
             if self.require("inertia", line, "inertia"):
-                rows.append((name, text))
+                rows.append((LEGACY_WEAPON_KEYS.get(name, name), text))
                 self.note_line("SAIKAI_INERTIA", f"{name}={text}", line)
         if "inertia" in self.system:
             line, words = self.system["inertia"]
@@ -721,10 +752,8 @@ class Compiler:
             spend = " ".join(line.words[1:])
             if not SPEND_RE.match(spend):
                 raise KitError(f"{line.where()}：消費は `none`・`carry`・`whole:<F>`・`lunge:<F>`・`window:<F>x<n>`（`<initial>+` も可）")
-            if name == "main":
+            if name == "main_shot":
                 perfs = self.base["mains"]
-            elif name == "melee":
-                perfs = self.base["melees"]
             else:
                 perfs = [p for p in self.bound.get(name, ()) if p] if self.kit else []
                 if not perfs:

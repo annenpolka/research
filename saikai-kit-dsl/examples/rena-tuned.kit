@@ -5,7 +5,7 @@ kit rena
 for play
 hp 12000                                        ?      # SAIKAI_HP の rena=（キャラクターの耐久値）
 
-main
+main_shot
   inertia  move                                        # 移動撃ち（on の表と同じ）
   ammo     constant/6/180/120                          # 常時リロード、6 発、180F、覚醒中 120F
   shots    nata.shot nata.lever_shot nata.air_shot     # この 3 つの弾のあとだけ同時押しで打ち切れる
@@ -13,12 +13,12 @@ main
 sub_shot
   inertia  stop:60/80/85 cap=-/4.0mbon          ?U60   # 縦の上限は MBON の長さ 4.0（×20/3 で原作の長さへ）
   ammo     depleted/3/240/180                   ?U43
-  cancel   main
+  cancel   main_shot
   air      keep                                        # 空中では空中射撃 402 を残す
   boost    whole:30                             ?
 
 special_shot
-  cancel   main dry                                    # 弾切れの空撃ちのメインからも打ち切る
+  cancel   main_shot dry                               # 弾切れの空撃ちのメインからも打ち切る
   boost    whole:30                             ?
 
 special_melee

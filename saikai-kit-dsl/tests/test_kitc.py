@@ -84,7 +84,7 @@ class Transposition(unittest.TestCase):
 
     def test_the_cancel_rows_become_to_and_except(self):
         env = compile_sheet(
-            "kit rena\nsub_shot\n  cancel main dry\nspecial_melee\n  cancel none\nsystem\n  cancel\n"
+            "kit rena\nsub_shot\n  cancel main_shot dry\nspecial_melee\n  cancel none\nsystem\n  cancel\n"
         ).env
         self.assertEqual(
             env["SAIKAI_CANCEL"], "on to=sub_shot,special_shot,down_melee except=sub_shot"
@@ -92,9 +92,9 @@ class Transposition(unittest.TestCase):
 
     def test_nothing_is_written_that_equals_the_default(self):
         env = compile_sheet(
-            "kit rena\nmain\n  shots nata.shot nata.lever_shot nata.slide_shot_right "
+            "kit rena\nmain_shot\n  shots nata.shot nata.lever_shot nata.slide_shot_right "
             "nata.slide_shot_left nata.air_dash_shot nata.air_shot\n"
-            "sub_shot\n  cancel main\ndown_melee\n  perf axe.shot / axe.air_shot\n  rainbow air\n"
+            "sub_shot\n  cancel main_shot\ndown_melee\n  perf axe.shot / axe.air_shot\n  rainbow air\n"
             "system\n  step\n  cancel\n"
         ).env
         self.assertEqual(env["SAIKAI_CANCEL"], "on")
@@ -129,7 +129,7 @@ class Refusals(unittest.TestCase):
         refused(self, "kit mion\nsub_shot\n  perf water.shot\n", "v1")
 
     def test_the_main_and_the_melees_are_not_the_kits(self):
-        refused(self, "kit rena\nmain\n  perf nata.shot\n", "controller")
+        refused(self, "kit rena\nmain_shot\n  perf nata.shot\n", "controller")
 
     def test_a_layer_the_water_gun_has_not_got(self):
         refused(self, "kit mion\nsystem\n  guard\n", "J77", "unsupported_class")

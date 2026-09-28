@@ -27,7 +27,7 @@ class EnglishSyntax(unittest.TestCase):
 
     def test_all_canonical_move_headers_parse(self):
         for name in (
-            "main", "melee", "sub_shot", "special_shot", "special_melee",
+            "main_shot", "neutral_melee", "side_melee", "sub_shot", "special_shot", "special_melee",
             "charge_shot", "down_melee",
         ):
             with self.subTest(name=name):
@@ -37,7 +37,7 @@ class EnglishSyntax(unittest.TestCase):
 
     def test_japanese_headers_are_rejected_with_replacements(self):
         headers = {
-            "メイン": "main", "格闘": "melee", "サブ": "sub_shot",
+            "メイン": "main_shot", "格闘": "neutral_melee / side_melee", "サブ": "sub_shot",
             "特射": "special_shot", "特格": "special_melee",
             "射CS": "charge_shot", "下格": "down_melee",
             "下格闘": "down_melee", "システム": "system",
@@ -47,7 +47,8 @@ class EnglishSyntax(unittest.TestCase):
                 with self.assertRaises(kitc.KitError) as caught:
                     kitc.compile_text(f"kit rena\n{old}\n")
                 self.assertIn("2 行目", str(caught.exception))
-                self.assertIn(f"`{replacement}`", str(caught.exception))
+                for candidate in replacement.split(" / "):
+                    self.assertIn(f"`{candidate}`", str(caught.exception))
 
     def test_japanese_properties_are_rejected_even_on_disabled_layers(self):
         properties = {
@@ -55,7 +56,7 @@ class EnglishSyntax(unittest.TestCase):
             "慣性": ("inertia", "own"),
             "弾": ("ammo", "none"),
             "ブースト": ("boost", "whole:30"),
-            "キャンセル": ("cancel", "main"),
+            "キャンセル": ("cancel", "main_shot"),
             "空中": ("air", "keep"),
             "虹ステ": ("rainbow", "air"),
         }
@@ -106,7 +107,7 @@ class EnglishSyntax(unittest.TestCase):
         heads = {
             "format", "kit", "for", "move", "resource", "bind", "unbind",
             "observe", "cancel", "followup", "transition", "retime",
-            "frames", "animation", "motion", "tune", "kitc",
+            "frames", "animation", "motion", "tune", "kitc", "main", "melee",
             *kitc.MOVE_ALIASES, *kitc.JAPANESE_MIGRATIONS,
         }
         paths = [ROOT / "README.md", *sorted((ROOT / "design").glob("*.md"))]
