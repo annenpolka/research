@@ -60,7 +60,7 @@ class Transposition(unittest.TestCase):
         # A written SAIKAI_INERTIA table starts from `default=stop` alone: the
         # sheet's row must not drop the `on` table's moving main and melees.
         env = compile_sheet(
-            "kit rena\nサブ\n  inertia stop:60/80/85\nsystem\n  inertia\n"
+            "kit rena\nsub_shot\n  inertia stop:60/80/85\nsystem\n  inertia\n"
         ).env
         rows = dict(item.split("=", 1) for item in env["SAIKAI_INERTIA"].split(";"))
         self.assertEqual(rows["sub_shot"], "stop:60/80/85")
@@ -71,20 +71,20 @@ class Transposition(unittest.TestCase):
 
     def test_a_cap_in_mbon_lengths_is_scaled_by_20_over_3(self):
         env = compile_sheet(
-            "kit rena\nサブ\n  inertia stop cap=-/4.0mbon\nsystem\n  inertia\n"
+            "kit rena\nsub_shot\n  inertia stop cap=-/4.0mbon\nsystem\n  inertia\n"
         ).env
         self.assertIn("sub_shot=stop:50/92/94 cap=-/26.666667", env["SAIKAI_INERTIA"])
 
     def test_a_boost_cost_goes_to_each_performance_of_the_move(self):
         env = compile_sheet(
-            "kit rena\n下格\n  perf axe.shot / axe.air_shot\n  boost lunge:20\n"
+            "kit rena\ndown_melee\n  perf axe.shot / axe.air_shot\n  boost lunge:20\n"
             "system\n  step\n  loco\n  boost_cost\n"
         ).env
         self.assertEqual(env["SAIKAI_BOOST_COST"], "axe.shot=lunge:20;axe.air_shot=lunge:20")
 
     def test_the_cancel_rows_become_to_and_except(self):
         env = compile_sheet(
-            "kit rena\nサブ\n  cancel main dry\n特格\n  cancel none\nsystem\n  cancel\n"
+            "kit rena\nsub_shot\n  cancel main dry\nspecial_melee\n  cancel none\nsystem\n  cancel\n"
         ).env
         self.assertEqual(
             env["SAIKAI_CANCEL"], "on to=sub_shot,special_shot,down_melee except=sub_shot"
@@ -92,9 +92,9 @@ class Transposition(unittest.TestCase):
 
     def test_nothing_is_written_that_equals_the_default(self):
         env = compile_sheet(
-            "kit rena\nメイン\n  shots nata.shot nata.lever_shot nata.slide_shot_right "
+            "kit rena\nmain\n  shots nata.shot nata.lever_shot nata.slide_shot_right "
             "nata.slide_shot_left nata.air_dash_shot nata.air_shot\n"
-            "サブ\n  cancel main\n下格\n  perf axe.shot / axe.air_shot\n  rainbow air\n"
+            "sub_shot\n  cancel main\ndown_melee\n  perf axe.shot / axe.air_shot\n  rainbow air\n"
             "system\n  step\n  cancel\n"
         ).env
         self.assertEqual(env["SAIKAI_CANCEL"], "on")
@@ -105,12 +105,12 @@ class Transposition(unittest.TestCase):
             "kit mion\nhp 9000\nsystem\n  charge\n"
         ).env
         self.assertEqual(env["SAIKAI_HP"], "on mion=9000")
-        env = compile_sheet("kit rena\nサブ\n  ammo depleted/2/300\nsystem\n  ammo\n").env
+        env = compile_sheet("kit rena\nsub_shot\n  ammo depleted/2/300\nsystem\n  ammo\n").env
         self.assertEqual(env["SAIKAI_AMMO"], "on sub_shot=depleted/2/300")
 
     def test_a_table_can_go_to_a_file_for_the_reload(self):
         result = compile_sheet(
-            "kit rena\nサブ\n  inertia own\nsystem\n  inertia file=t.txt\n"
+            "kit rena\nsub_shot\n  inertia own\nsystem\n  inertia file=t.txt\n"
         )
         self.assertEqual(result.env["SAIKAI_INERTIA"], "@t.txt")
         self.assertIn("sub_shot=own\n", result.files["t.txt"])
@@ -119,17 +119,17 @@ class Transposition(unittest.TestCase):
 
 class Refusals(unittest.TestCase):
     def test_an_unknown_performance_names_its_line(self):
-        refused(self, "kit rena\n\nサブ\n  perf nata.bakstep_shot\n", "4 行目", "unknown_performance")
+        refused(self, "kit rena\n\nsub_shot\n  perf nata.bakstep_shot\n", "4 行目", "unknown_performance")
 
     def test_a_borrow_never_measured_onto_the_base(self):
-        refused(self, "kit mion\n特格\n  perf iron.slide_melee\n", "unmeasured_borrow")
+        refused(self, "kit mion\nspecial_melee\n  perf iron.slide_melee\n", "unmeasured_borrow")
 
     def test_a_binding_the_kit_setting_cannot_say_needs_v1(self):
-        refused(self, "kit rena\nサブ\n  perf nata.shot\n", "v1")
-        refused(self, "kit mion\nサブ\n  perf water.shot\n", "v1")
+        refused(self, "kit rena\nsub_shot\n  perf nata.shot\n", "v1")
+        refused(self, "kit mion\nsub_shot\n  perf water.shot\n", "v1")
 
     def test_the_main_and_the_melees_are_not_the_kits(self):
-        refused(self, "kit rena\nメイン\n  perf nata.shot\n", "controller")
+        refused(self, "kit rena\nmain\n  perf nata.shot\n", "controller")
 
     def test_a_layer_the_water_gun_has_not_got(self):
         refused(self, "kit mion\nsystem\n  guard\n", "J77", "unsupported_class")
@@ -149,13 +149,13 @@ class Refusals(unittest.TestCase):
     def test_one_key_in_two_places(self):
         refused(
             self,
-            "kit rena\nサブ\n  ammo none\nsystem\n  ammo sub_shot=never/1/1\n",
+            "kit rena\nsub_shot\n  ammo none\nsystem\n  ammo sub_shot=never/1/1\n",
             "両方",
         )
 
     def test_cancel_with_no_move_left(self):
         text = "kit rena\n" + "".join(
-            f"{m}\n  cancel none\n" for m in ("サブ", "特射", "特格", "下格")
+            f"{m}\n  cancel none\n" for m in ("sub_shot", "special_shot", "special_melee", "down_melee")
         ) + "system\n  cancel\n"
         refused(self, text, "to=none")
 
@@ -172,7 +172,7 @@ class Refusals(unittest.TestCase):
         # most), so the vocabulary is narrowed to one donor for the test.
         vocab = kitc.load_vocab()
         vocab["max_donor_classes"] = 1
-        sheet = kitc.parse("kit rena\n下格\n  perf axe.shot / axe.air_shot\n")
+        sheet = kitc.parse("kit rena\ndown_melee\n  perf axe.shot / axe.air_shot\n")
         with self.assertRaises(kitc.KitError) as cm:
             kitc.Compiler(sheet, vocab).compile()
         self.assertIn("too_many_donors", str(cm.exception))
@@ -180,14 +180,14 @@ class Refusals(unittest.TestCase):
 
 class Notes(unittest.TestCase):
     def test_air_says_which_air_performances_are_not_played(self):
-        result = compile_sheet("kit rena\nサブ\n  air keep\nsystem\n  air\n")
+        result = compile_sheet("kit rena\nsub_shot\n  air keep\nsystem\n  air\n")
         self.assertEqual(result.env["SAIKAI_AIR"], "on keep=nata.air_shot")
         joined = "\n".join(result.notes)
         self.assertNotIn("`sub_shot` は空中でも", joined)
         self.assertIn("`special_shot` は空中でも地上の nata.full_charge_shot", joined)
 
     def test_a_row_for_a_layer_that_is_off_is_a_warning(self):
-        result = compile_sheet("kit rena\nサブ\n  ammo none\n")
+        result = compile_sheet("kit rena\nsub_shot\n  ammo none\n")
         self.assertNotIn("SAIKAI_AMMO", result.env)
         self.assertTrue(any("効かない" in w for w in result.warnings))
 

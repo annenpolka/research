@@ -93,7 +93,7 @@ resource.spent amount=1 cause=batch7
 ```text
 move dive
   observe touched from=ground.contact_enter subject=self occurrence=first scope=this_move
-  cancel step-after-touch into=system.step input=ステップ from=touched require=grounded
+  cancel step-after-touch into=system.step input=step from=touched require=grounded
 ```
 
 未実装の記法例。`system.step` と入力名も対応する登録が必要。履歴だけでなく現在も接地していることを要求する。

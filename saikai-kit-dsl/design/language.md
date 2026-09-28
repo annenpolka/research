@@ -6,16 +6,20 @@
 
 ## 1. 入口と省略
 
+**キーワード、コマンド名、項目名、列挙値、参照用IDは英語のASCII表記に統一する。** 日本語の構文別名は設けない。日本語は説明文、コメント、引用符で囲んだ表示ラベル、ファイルパスなどの文字列データに残せる。表示ラベルを技IDや入力名として解釈しない。
+
+コマンドの正規名は `main`、`melee`、`sub_shot`、`special_shot`、`special_melee`、`charge_shot`、`down_melee`。システム入力の設計例は `step` を使うが、v0の技見出しへ追加する意味ではない。旧表記からの移行は [READMEの対応表](../README.md#文法の英語表記)を参照。
+
 ```text
 format 1
 kit rena extends=saikai.rena
 for play
 
-メイン
+main
   ammo constant capacity=6 reload=180f burst_reload=120f ?
   motion move
 
-サブ boomerang "ブーメラン"
+sub_shot boomerang "ブーメラン"
   perf ground=nata.backstep_shot air=nata.air_shot
   ammo depleted capacity=3 reload=240f burst_reload=180f ?
   spend ammo amount=1 at=fire:first
@@ -31,7 +35,7 @@ for play
 
 | 名前 | 役割 |
 |---|---|
-| Command | 認識済み入力。`サブ` は `sub_shot` の固定別名 |
+| Command | 認識済み入力。`sub_shot` などの英語正規名で参照 |
 | MoveId | 技の安定した識別子。配置変更でも性能が付いていく |
 | PerfId | 原作から使う演目・素材 |
 | ResourceId | 弾倉等の定義。残量はactorごと |
@@ -40,16 +44,16 @@ for play
 
 実行時のactor世代、MoveInstanceId、StageInstanceId、弾ID等はruntimeが作る。DSL作者が数字を管理しない。
 
-`サブ boomerang "ブーメラン"` は `move boomerang` と `bind サブ -> boomerang` の短縮形。ラベルは表示用で参照には使わない。
+`sub_shot boomerang "ブーメラン"` は `move boomerang` と `bind sub_shot -> boomerang` の短縮形。ラベルは表示用で参照には使わない。
 
 ```text
-unbind サブ
-bind 特射 -> boomerang
+unbind sub_shot
+bind special_shot -> boomerang
 ```
 
 配置だけの変更で技の弾数・慣性・攻撃定義をコピーしない。同じ演目を別技で使っても独立に調整できる。backendが区別できない項目は衝突として拒否する。
 
-`サブ` だけの見出しは固定基底で一意な技へ解決する。方向や形態で複数に分かれる場合は技IDを要求する。同一ファイル内の配置変更を見出しの解決に順次反映させない。
+`sub_shot` だけの見出しは固定基底で一意な技へ解決する。方向や形態で複数に分かれる場合は技IDを要求する。同一ファイル内の配置変更を見出しの解決に順次反映させない。
 
 bindingを宣言したcommandは、その層の宣言集合で基底の集合を置き換える。条件が重複すればエラー。一つの明示的な `otherwise` は認める。行順・暗黙の詳細条件優先は使わない。移動元commandの解除は別途明示する。
 
@@ -69,8 +73,8 @@ move rush
   spend approach amount=1 at=start
   empty refuse
 
-bind 特格 -> backflip lever=neutral
-bind 特格 -> rush lever=forward
+bind special_melee -> backflip lever=neutral
+bind special_melee -> rush lever=forward
 ```
 
 これは演目指定を省略した構造例。資源共有は各actorの内部であり、別プレイヤーとの共有ではない。
@@ -101,8 +105,8 @@ require=all(grounded,resource.available(approach,1))
 
 ```text
 move main_shot
-  cancel to-sub into=boomerang input=サブ from=18f through=32f
-  cancel to-rush into=rush input=特格 from=fire:first+2f before=move_end
+  cancel to-sub into=boomerang input=sub_shot from=18f through=32f
+  cancel to-rush into=rush input=special_melee from=fire:first+2f before=move_end
 ```
 
 `cancel` は入力許可。`into` はMoveIdか `system.bd` 等の予約名。`input` の省略は、目的技の入力が一意に解決するときだけ可能。route IDの省略も正規化後に一意な場合だけ認め、差分で個別編集するルートには明示IDを使う。
@@ -122,19 +126,19 @@ move volley entry=first
   stage first
     perf ground=sample.shot air=sample.air_shot
     spend ammo amount=1 at=fire:first
-    followup into=stage(second) input=メイン from=fire:first+2f before=stage_end
-    cancel escape into=retreat input=特格 from=fire:first+2f before=stage_end
+    followup into=stage(second) input=main from=fire:first+2f before=stage_end
+    cancel escape into=retreat input=special_melee from=fire:first+2f before=stage_end
 
   stage second
     perf ground=sample.shot air=sample.air_shot
     spend ammo amount=1 at=fire:first
-    followup into=stage(third) input=メイン from=fire:first+2f before=stage_end
-    cancel escape into=retreat input=特格 from=fire:first+2f before=stage_end
+    followup into=stage(third) input=main from=fire:first+2f before=stage_end
+    cancel escape into=retreat input=special_melee from=fire:first+2f before=stage_end
 
   stage third
     perf ground=sample.finisher air=sample.air_finisher
     spend ammo amount=1 at=fire:first
-    cancel escape into=retreat input=特格 from=fire:first+2f before=stage_end
+    cancel escape into=retreat input=special_melee from=fire:first+2f before=stage_end
 ```
 
 追加段への入力は新しい入力要求。最初の入力を三回再利用しない。段末で派生しなければ技を終了する。段移行でMoveInstanceIdは維持し、StageInstanceIdを更新する。別技へのcancelは新しいMoveInstanceId。第三段には追加段がないので最大三段となる。
@@ -197,6 +201,6 @@ move boomerang
 
 UTF-8、LF/CRLF、2個のASCIIスペース単位の字下げ。タブ/全角スペースの字下げは診断する。引用符外の `#` は行末コメント。文字列は二重引用符で、`\"` と `\\` を扱う。`key=value`、`->`、行末印を別トークンとして扱う。
 
-日本語/英語の別名は固定表で正規化し、正規化後に重複を検出する。条件組合せは閉じた文法、時間式は「一つの基準±長さ」であり汎用式ではない。v0の空白splitをそのまま拡張パーサーとみなさない。
+構文語と参照用IDには英語ASCII表記を使う。日本語の語を英語へ暗黙変換せず、診断で正規名への置換を案内する。同じ正規名の二重定義は拒否する。条件組合せは閉じた文法、時間式は「一つの基準±長さ」であり汎用式ではない。v0の空白splitをそのまま拡張パーサーとみなさない。
 
 `raw` を残す場合は観測用の許可リストに限定。型付きゲーム設定を裏から上書きさせない。高度な正当な調整を `raw` に追い出す設計にはしない。

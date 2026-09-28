@@ -41,7 +41,7 @@ KitPlanはbindings、moves/stages、resources、attacks、forms/local-state、ca
 
 ## 3. v0で残っている改善候補
 
-基準は `kitc.py` blob `081f05219a9107c942e7423fd7e6c902baac52da`。今回の文書編集では直していない。
+基準は `kitc.py` blob `081f05219a9107c942e7423fd7e6c902baac52da`。統合案の整理と文法の英語化では、以下の意味論上の問題は直していない。
 
 - 無効な層への項目がwarningと省略になり、warning表示が `--report` に依存する経路。新契約では標準表示と拒否を分けず保証する。
 - `Result.digest()` がenvだけを使い、外部ファイルの内容を含めない。参照先が同じで内容だけ変わる場合を区別できない。
@@ -65,7 +65,7 @@ source/evidenceのハッシュは別。意味のある配列順は維持し、�
 次は将来CLI案で、v0のコマンドではない。
 
 ```text
-kitc check rena.kit --target <固定target>
+kitc check rena.kit --target <fixed-target>
 kitc explain rena.kit --move boomerang --timeline
 kitc diff rena.kit --tune slower-sub.tune
 kitc build rena.kit --backend legacy-env
@@ -97,7 +97,7 @@ traceは実行ID、時計、source位置、観測時刻、受付可否の理由�
 
 | ID | 条件 | 期待結果 |
 |---|---|---|
-| L01 | 日本語/英語別名、コメント変更 | 同じIR。実行hash不変 |
+| L01 | 英語構文、日本語の表示ラベル・コメント | 表示文だけの変更では実行定義/hash不変。日本語構文語は拒否 |
 | L02 | v0の有効な既存例 | 意図しない設定値の差がない |
 | L03 | 未知/未対応、重複、衝突 | playでも拒否し必ず診断 |
 | L04 | 同一PerfIdを別MoveIdで調整 | 対応nativeは分離、不能legacyは拒否 |

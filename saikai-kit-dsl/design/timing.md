@@ -28,8 +28,8 @@ cancel into=retreat from=planned:fire:first-2f before=move_end
 source座標は上記とは別で、retimeの対象。リロードや入力バッファにもそれぞれ固定された時計契約を持たせ、同じ `f` だから同じ進み方だと推測しない。
 
 ```text
-cancel to-sub into=boomerang input=サブ from=18f through=32f
-cancel to-sub into=boomerang input=サブ from=18f before=33f
+cancel to-sub into=boomerang input=sub_shot from=18f through=32f
+cancel to-sub into=boomerang input=sub_shot from=18f before=33f
 ```
 
 上の二行は代替表記で同時指定しない。18〜32Fの15更新分の名目窓。`from` は含む、`through` は含む、`before` は含まない。両方の終端は書けない。内部は一つの半開区間へ正規化する。
@@ -41,7 +41,7 @@ cancel to-sub into=boomerang input=サブ from=18f before=33f
 ## 3. 窓・条件・入力保存を分ける
 
 ```text
-cancel hit-route into=rush input=特格 from=18f through=30f require=hit:first buffer=4f
+cancel hit-route into=rush input=special_melee from=18f through=30f require=hit:first buffer=4f
 ```
 
 窓は18〜30Fで固定。命中済みは追加条件。命中した時刻へ窓を移す指定ではない。`buffer=4f` は入力を最大4F先の判定まで保持し、窓を拡張しない。18Fの判定へ14Fの入力は届くが13Fは届かない。

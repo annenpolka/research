@@ -41,32 +41,56 @@ from pathlib import Path
 VOCAB_PATH = Path(__file__).with_name("vocab.json")
 
 # ---------------------------------------------------------------------------
-# Words. The sheet accepts saikai's own names and the words EXVS players use.
+# Syntax uses English/ASCII words. Japanese remains valid in comments and data.
 
 MOVE_ALIASES = {
-    "main": "main", "メイン": "main",
-    "melee": "melee", "格闘": "melee",
-    "sub_shot": "sub_shot", "サブ": "sub_shot",
-    "special_shot": "special_shot", "特射": "special_shot",
-    "special_melee": "special_melee", "特格": "special_melee",
-    "charge_shot": "charge_shot", "射CS": "charge_shot", "CS": "charge_shot",
-    "down_melee": "down_melee", "下格": "down_melee", "下格闘": "down_melee",
+    "main": "main",
+    "melee": "melee",
+    "sub_shot": "sub_shot",
+    "special_shot": "special_shot",
+    "special_melee": "special_melee",
+    "charge_shot": "charge_shot",
+    "CS": "charge_shot",
+    "down_melee": "down_melee",
 }
 # The weapon rows that are not kit moves: the original's controller plays them.
 WEAPON_ROWS = ("main", "melee")
 
 PROP_ALIASES = {
-    "perf": "perf", "演目": "perf",
-    "inertia": "inertia", "慣性": "inertia",
-    "ammo": "ammo", "弾": "ammo",
-    "boost": "boost", "ブースト": "boost",
-    "cancel": "cancel", "キャンセル": "cancel",
-    "air": "air", "空中": "air",
-    "rainbow": "rainbow", "虹ステ": "rainbow",
+    "perf": "perf",
+    "inertia": "inertia",
+    "ammo": "ammo",
+    "boost": "boost",
+    "cancel": "cancel",
+    "air": "air",
+    "rainbow": "rainbow",
     "shots": "shots",
 }
 
-HEADER_ALIASES = {"system": "system", "システム": "system", "raw": "raw"}
+HEADER_ALIASES = {
+    "system": "system",
+    "raw": "raw",
+}
+
+# Migration hints only: these spellings are rejected, never normalized.
+JAPANESE_MIGRATIONS = {
+    "メイン": "main",
+    "格闘": "melee",
+    "サブ": "sub_shot",
+    "特射": "special_shot",
+    "特格": "special_melee",
+    "射CS": "charge_shot",
+    "下格": "down_melee",
+    "下格闘": "down_melee",
+    "演目": "perf",
+    "慣性": "inertia",
+    "弾": "ammo",
+    "ブースト": "boost",
+    "キャンセル": "cancel",
+    "空中": "air",
+    "虹ステ": "rainbow",
+    "システム": "system",
+}
 
 # The order kitc writes the variables in (the order of saikai's play setting).
 ENV_ORDER = (
@@ -149,6 +173,11 @@ def read_lines(text: str) -> list[tuple[int, bool, list[str], str | None]]:
             continue
         indented = body[:1] in (" ", "\t", "　")
         words = body.split()
+        if words[0] in JAPANESE_MIGRATIONS:
+            replacement = JAPANESE_MIGRATIONS[words[0]]
+            raise KitError(
+                f"{no} 行目：日本語の構文語 `{words[0]}` は使えない。`{replacement}` に置き換える"
+            )
         mark = None
         if words and MARK_RE.match(words[-1]):
             mark = words.pop()
@@ -183,7 +212,7 @@ def parse(text: str) -> Sheet:
         head = words[0]
         if head == "kit":
             if sheet.kit or len(words) != 2:
-                raise KitError(f"{no} 行目：`kit <名前>` は 1 回だけ")
+                raise KitError(f"{no} 行目：`kit <name>` は 1 回だけ")
             sheet.kit = line
         elif head == "for":
             if sheet.mode or len(words) != 2 or words[1] not in ("play", "run"):
@@ -191,7 +220,7 @@ def parse(text: str) -> Sheet:
             sheet.mode = line
         elif head == "hp":
             if sheet.hp or len(words) not in (2, 3):
-                raise KitError(f"{no} 行目：`hp <耐久値> [unit=<尺度>]` を 1 回だけ")
+                raise KitError(f"{no} 行目：`hp <hp> [unit=<scale>]` を 1 回だけ")
             sheet.hp = line
         elif head in MOVE_ALIASES:
             if len(words) != 1:
@@ -239,17 +268,17 @@ def length(value: str, vocab: dict, where: str) -> str:
 def carry(words: list[str], vocab: dict, where: str) -> str:
     """`move`, `own`, `stop`, `stop:<start>/<ground>/<air>`, then `cap=<h>/<v>`."""
     if not words or not CARRY_RE.match(words[0]):
-        raise KitError(f"{where}：慣性は `move`・`own`・`stop`・`stop:<始め>/<地上>/<空中>`")
+        raise KitError(f"{where}：慣性は `move`・`own`・`stop`・`stop:<initial>/<ground>/<air>`")
     text = words[0]
     if text.startswith("stop:") and any(int(p) > 100 for p in text[5:].split("/")):
         raise KitError(f"{where}：慣性の率は 0〜100")
     rest = words[1:]
     if rest:
         if len(rest) != 1 or not rest[0].startswith("cap=") or not text.startswith("stop"):
-            raise KitError(f"{where}：`cap=<横>/<縦>` は止まる武装（stop）にだけ 1 つ")
+            raise KitError(f"{where}：`cap=<horizontal>/<vertical>` は止まる武装（stop）にだけ 1 つ")
         parts = rest[0][4:].split("/")
         if len(parts) != 2:
-            raise KitError(f"{where}：`cap=<横>/<縦>`")
+            raise KitError(f"{where}：`cap=<horizontal>/<vertical>`")
         if text == "stop":
             text = "stop:50/92/94"
         text += " cap=" + "/".join(length(p, vocab, where) for p in parts)
@@ -311,7 +340,7 @@ class Compiler:
         if self.mode == "run" and line.mark is None:
             raise KitError(
                 f"{line.where()}：`for run` では値に出どころの印が要る"
-                "（ユーザーの決定は `!J<番号>`、提案は `?U<番号>` か `?`）"
+                "（ユーザーの決定は `!J<id>`、提案は `?U<id>` か `?`）"
             )
         self.prov.append(Provenance(var, what, line.mark, line.no))
 
@@ -327,7 +356,7 @@ class Compiler:
                     if layer not in self.v["layers"]:
                         raise KitError(f"{line.where()}：知らない層 `{layer}`")
                     if layer == "kit":
-                        raise KitError(f"{line.where()}：キットは `kit <名前>` の見出しで書く")
+                        raise KitError(f"{line.where()}：キットは `kit <name>` の見出しで書く")
                     if layer in self.system:
                         raise KitError(f"{line.where()}：層 `{layer}` を 2 回書いている")
                     if line.words[1:] == ["off"]:
@@ -336,7 +365,7 @@ class Compiler:
             elif block.kind == "raw":
                 for line in block.lines:
                     if len(line.words) < 2 or not line.words[0].startswith("SAIKAI_"):
-                        raise KitError(f"{line.where()}：`raw` の行は `SAIKAI_<名前> <値>`")
+                        raise KitError(f"{line.where()}：`raw` の行は `SAIKAI_<name> <value>`")
                     self.raw[line.words[0]] = (line, " ".join(line.words[1:]))
 
     def collect_move(self, block: Block) -> None:
@@ -354,7 +383,7 @@ class Compiler:
                 if block.name in WEAPON_ROWS:
                     raise KitError(
                         f"{line.where()}：`{block.name}` はキットの外（原作の controller が出す）。"
-                        "演目を結べるのはサブ・特射・特格・射CS・下格闘だけ"
+                        "演目を結べるのは sub_shot・special_shot・special_melee・charge_shot・down_melee だけ"
                     )
                 move.perf = self.read_perf(line)
                 move.perf_line = line
@@ -366,7 +395,7 @@ class Compiler:
         elif len(words) == 3 and words[1] == "/":
             ground, air = words[0], words[2]
         else:
-            raise KitError(f"{line.where()}：`perf <地上> [/ <空中>]`（片側だけなら `-`）")
+            raise KitError(f"{line.where()}：`perf <ground> [/ <air>]`（片側だけなら `-`）")
         ground = None if ground == "-" else ground
         air = None if air == "-" else air
         if ground is None and air is None:
@@ -393,7 +422,7 @@ class Compiler:
         if self.kit is None:
             bound = [m for m in self.moves if m not in WEAPON_ROWS and self.moves[m].perf]
             if bound:
-                raise KitError(f"{self.moves[bound[0]].perf_line.where()}：演目を結ぶには `kit <名前>` が要る")
+                raise KitError(f"{self.moves[bound[0]].perf_line.where()}：演目を結ぶには `kit <name>` が要る")
             return
         spec = self.v["kits"][self.kit]
         options = []
@@ -437,7 +466,7 @@ class Compiler:
         where = move.perf_line.where() if move and move.perf_line else self.sheet.kit.where()
         return KitError(
             f"{where}：{why}。v0 は今の SAIKAI_KIT の文字列にしか訳せない。"
-            "この割り当てには saikai 側で SAIKAI_KIT=@<キットのファイル> を読む変更（README の v1）が要る"
+            "この割り当てには saikai 側で SAIKAI_KIT=@<kit-file> を読む変更（README の v1）が要る"
         )
 
     def kit_perfs(self) -> dict[str, tuple[str | None, str | None]]:
@@ -471,7 +500,7 @@ class Compiler:
                 out["observe"] = ""
                 continue
             if "=" not in w:
-                raise KitError(f"{line.where()}：`{layer}` の項目 `{w}` は `<鍵>=<値>` で書く")
+                raise KitError(f"{line.where()}：`{layer}` の項目 `{w}` は `<key>=<value>` で書く")
             key, value = w.split("=", 1)
             allowed = self.v["layers"][layer]["keys"]
             ok = key in allowed or any(a.endswith("*") and key.startswith(a[:-1]) for a in allowed)
@@ -578,7 +607,7 @@ class Compiler:
                 raise KitError(f"{line.where()}：弾倉を持てるのは {', '.join(self.v['ammo_rows'])}（`{name}` は無い）")
             value = " ".join(line.words[1:])
             if not MAG_RE.match(value):
-                raise KitError(f"{line.where()}：弾倉は `<constant|depleted|never|manual>/<最大>/<時間>[/<撃ち切りの時間>]…` か `none`")
+                raise KitError(f"{line.where()}：弾倉は `<constant|depleted|never|manual>/<capacity>/<reload>[/<burst_reload>]…` か `none`")
             if name == "main" and ("/hold" in value or value.startswith("manual")):
                 raise KitError(f"{line.where()}：メインの弾倉に hold・manual は使えない")
             if self.require("ammo", line, "ammo"):
@@ -607,7 +636,7 @@ class Compiler:
                 self.note_line("SAIKAI_CANCEL", f"{name}: {' '.join(words)}", line)
         for name, _, line in self.move_lines("shots"):
             if name != "main":
-                raise KitError(f"{line.where()}：`shots` はメインの見出しにだけ書く（キャンセルできるメインの演目）")
+                raise KitError(f"{line.where()}：`shots` は `main` の見出しにだけ書く（キャンセルできるメインの演目）")
             shots = line.words[1:]
             for s in shots:
                 if s not in self.base["mains"]:
@@ -691,7 +720,7 @@ class Compiler:
         for name, move, line in self.move_lines("boost"):
             spend = " ".join(line.words[1:])
             if not SPEND_RE.match(spend):
-                raise KitError(f"{line.where()}：消費は `none`・`carry`・`whole:<F>`・`lunge:<F>`・`window:<F>x<n>`（`<始め>+` も可）")
+                raise KitError(f"{line.where()}：消費は `none`・`carry`・`whole:<F>`・`lunge:<F>`・`window:<F>x<n>`（`<initial>+` も可）")
             if name == "main":
                 perfs = self.base["mains"]
             elif name == "melee":
@@ -718,7 +747,7 @@ class Compiler:
             if w.startswith("file="):
                 file = w[5:]
             else:
-                raise KitError(f"{line.where()}：`{layer}` の system の行に書けるのは `file=<パス>` だけ（行は技の中に書く）")
+                raise KitError(f"{line.where()}：`{layer}` の system の行に書けるのは `file=<path>` だけ（行は技の中に書く）")
         if file:
             self.files[file] = "# kitc が書いた。直接直さず .kit を直して kitc をもう一度\n" + whole.replace(";", "\n") + "\n"
             self.env[layer] = "@" + file
@@ -751,7 +780,7 @@ class Compiler:
             value = f"{self.base['character']}={words[0]}"
             if len(words) == 2:
                 if not words[1].startswith("unit="):
-                    raise KitError(f"{self.sheet.hp.where()}：`hp <耐久値> [unit=<尺度>]`")
+                    raise KitError(f"{self.sheet.hp.where()}：`hp <hp> [unit=<scale>]`")
                 value = f"{words[1]} {value}"
             if "hp" in self.system:
                 self.env["hp"] += " " + value
