@@ -45,7 +45,7 @@ v0の見出し・項目名と、統合案の構文・コマンド・参照用ID�
 | 旧構文の表記 | 英語表記 |
 |---|---|
 | メイン・`main` | `main_shot` |
-| 格闘・`melee` | 一括置換不可。N格の `neutral_melee` と横格の `side_melee` を区別する |
+| 格闘・`melee` | 一括置換不可。N格・前格・横格・下格・BD格を区別する（次節） |
 | サブ | `sub_shot` |
 | 特射 | `special_shot` |
 | 特格 | `special_melee` |
@@ -64,7 +64,17 @@ v0に既存のASCII別名 `CS` は互換のため残すが、例文と統合案�
 
 ## 主射撃・N格・横格の名前
 
-公開コマンドは `main_shot`、`neutral_melee`、`side_melee`、`sub_shot`、`special_shot`、`special_melee`、`charge_shot`、`down_melee`。見出し、`bind`、`input=` は同じ正規名を使う。`main_shot` は主射撃、`neutral_melee` はN格、`side_melee` は左右の横格であり、後二者は別コマンド・別の技定義へ解決する。
+公開コマンドは `main_shot`、`neutral_melee`、`up_melee`、`side_melee`、`down_melee`、`boost_dash_melee`、`sub_shot`、`special_shot`、`special_melee`、`charge_shot`。見出し、`bind`、`input=` は同じ正規名を使う。格闘5種は別コマンド・別の技定義へ解決する。
+
+| 格闘コマンド | 意味 |
+|---|---|
+| `neutral_melee` | N格闘 |
+| `up_melee` | 前格闘。レバー上の入力側命名 |
+| `side_melee` | 左右の横格闘 |
+| `down_melee` | 下格闘。既存ゲーム側の名前を維持 |
+| `boost_dash_melee` | BD格闘。単なる方向入力とは別の移動状態条件 |
+
+`down_melee` を `back_melee` へは改名しない。前格は入力側の `up` / `down` に揃えて `up_melee` とする。`front_melee`、`back_melee`、`dash_melee` は公開コマンドの別名にしない。既存の演目名 `nata.front_melee`、`nata.dash_melee`、`nata.air_dash_melee` は素材の識別子として維持し、BD格へ自動で割り当てない。命名の根拠と入力・演目の区別は [記法のコマンド定義](design/language.md#21-主射撃と方向別格闘コマンド)に記載する。
 
 `main` は文法上の旧名として拒否する。v0の `cancel main` / `cancel main dry` も `cancel main_shot` / `cancel main_shot dry` へ移す。`melee` は以前は格闘全般をまとめていたため、`neutral_melee` の互換別名にはしない。前格・BD格などをN格または横格へ自動で含めない。
 
@@ -73,8 +83,9 @@ v0に既存のASCII別名 `CS` は互換のため残すが、例文と統合案�
 | 項目 | 現在のv0 | 統合設計案 |
 |---|---|---|
 | `main_shot` と `cancel main_shot` | 対応。既存出力を維持 | 正規コマンドとして使用 |
-| `neutral_melee` / `side_melee` | parserでは別見出しとして保持。性能指定の変換は未対応 | 独立した割当・性能・時間・キャンセルを記述 |
-| N格・横格の個別設定 | `unsupported_command_split` で拒否。全格闘へ広げたり設定を捨てたりしない | controllerの方向別役割と演目集合を接続して実行 |
+| `neutral_melee` / `up_melee` / `side_melee` / `boost_dash_melee` | parserでは別見出しとして保持。性能指定の変換は未対応 | 独立した割当・性能・時間・キャンセルを記述 |
+| 上記4種の個別設定 | `unsupported_command_split` で拒否。全格闘へ広げたり設定を捨てたりしない | controllerの方向・移動状態別役割と演目集合を接続して実行 |
+| `down_melee` | 既存のキット設定への変換を維持。上記4種の未対応扱いへ含めない | 同じ公開名を維持 |
 
 方向別見出しの空ブロックは設定を要求しないため読み取れるが、それだけで個別調整やゲーム内入力の対応が完成した意味ではない。具体例と方向の扱いは [記法のコマンド定義](design/language.md#21-主射撃と方向別格闘コマンド)を参照。
 
@@ -139,7 +150,7 @@ system
 
 語彙、oracle、ゲームDLL、時間・キャンセルの意味論は変更していない。Rust検証器の再実行とゲーム内検証は行っていない。`design/` の26項目は引き続き今後の受入仕様で、今回の34件のテストとは別物である。
 
-## 主射撃名・格闘区別の変更と検証
+## 以前の主射撃名・格闘区別の変更と検証（1a27da0）
 
 変更前の基準は `9119ec150f32ddc0fed615ab304a7535f32a18b7`。主射撃を `main_shot` へ移し、N格・横格を別名として保持する。旧名は移行診断で拒否し、既存backendの `main` / `melee` 語彙は維持する。
 
@@ -150,3 +161,9 @@ system
 | 既存3例の変更前後比較 | 環境変数と生成ファイル、cmd/ps/sh/inlineの4形式の出力が完全一致 |
 
 ゲームDLL・固定語彙・oracle・性能値は変更していない。N格・横格の方向別controller接続、拡張構文の実行、Rust検証器の再実行、実機検証は行っていない。
+
+## 前格・BD格の追加と検証
+
+変更前の基準は `1a27da04fbb4cc8f10a6d65b45312c4e1c929aed`。公開見出しに `up_melee` と `boost_dash_melee` を追加し、`down_melee` は維持した。パーサーでの区別と、未接続の性能指定を拒否する段階であり、ゲーム側controllerの追加ではない。
+
+`python3 -m unittest discover -s tests -p test_up_and_boost_dash.py -v` の追加7件はすべて成功。新名の識別・重複拒否・設定の独立性・未対応診断、既存下格の出力、主射撃のbackendキー、原作演目名の維持を確認した。変更後の `kitc.py` の構文検査も成功。既存テスト全体・Rust検証器・ゲーム内動作は今回再検証していない。

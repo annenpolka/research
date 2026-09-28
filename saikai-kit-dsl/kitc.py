@@ -46,7 +46,9 @@ VOCAB_PATH = Path(__file__).with_name("vocab.json")
 MOVE_ALIASES = {
     "main_shot": "main_shot",
     "neutral_melee": "neutral_melee",
+    "up_melee": "up_melee",
     "side_melee": "side_melee",
+    "boost_dash_melee": "boost_dash_melee",
     "sub_shot": "sub_shot",
     "special_shot": "special_shot",
     "special_melee": "special_melee",
@@ -55,11 +57,13 @@ MOVE_ALIASES = {
     "down_melee": "down_melee",
 }
 # The weapon rows that are not kit moves: the original's controller plays them.
-WEAPON_ROWS = ("main_shot", "neutral_melee", "side_melee")
-DIRECTIONAL_MELEE = ("neutral_melee", "side_melee")
+# Directional and movement-context commands need their own controller mapping.
+# down_melee already has a native kit command; do not gate it with these stubs.
+DIRECTIONAL_MELEE = ("neutral_melee", "up_melee", "side_melee", "boost_dash_melee")
+WEAPON_ROWS = ("main_shot", *DIRECTIONAL_MELEE)
 
 # Public commands and the frozen backend vocabulary have different namespaces.
-# Never collapse the two directional melee commands into the old aggregate row.
+# Never collapse split melee commands into the old aggregate row.
 LEGACY_WEAPON_KEYS = {"main_shot": "main"}
 
 PROP_ALIASES = {
