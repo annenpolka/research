@@ -1,29 +1,16 @@
 #!/usr/bin/env python3
-"""kitc: a prototype compiler for a human-facing kit sheet of daybreak-saikai.
+"""Compile English kit sheets into the frozen Saikai backend settings.
 
-A kit sheet (`*.kit`) is written move by move, the way a player thinks of a
-kit (the sub: what it plays, how it carries momentum, its magazine, whether
-it cancels the main). Saikai reads its settings layer by layer instead
-(`SAIKAI_INERTIA`, `SAIKAI_AMMO`, `SAIKAI_CANCEL`, ...), each with its own
-small grammar. kitc transposes the sheet into those `SAIKAI_*` values, so
-the sheet runs on today's saikai without any change to its Rust code (v0).
+Public commands are independent of the backend's serialized keys and native
+performance names. Sheets group settings by command; the compiler emits
+SAIKAI_* values by layer using vocab.json (saikai abe253c).
 
-Checks made before the game ever starts:
+The compiler validates known names, measured borrowing, layer support and
+configuration dependencies. The extended combat language in design/ is not
+implemented here; recognized but unmapped commands reject their settings.
+Japanese text remains valid in comments, paths and diagnostic prose.
 
-- names: every performance, move, layer and option key is from the
-  vocabulary (vocab.json, a snapshot of saikai abe253c);
-- the base: a layer the base class does not support yet is refused
-  (saikai J77); a performance of another class needs a measured borrow onto
-  the base, and at most two donor classes;
-- dependencies the runtime has but does not explain (the loco needs the
-  step's hook, even on the water gun where the step itself is refused);
-- the tables' override rules: a written `SAIKAI_INERTIA` table starts from
-  nothing but `default=stop`, a written `SAIKAI_BOOST_COST` table starts from
-  the `on` table; kitc always starts from the `on` table;
-- provenance: `!J<n>` marks a user decision, `?U<n>` or `?` a proposal.
-  `for run` refuses an unmarked line (a run record must say which values
-  were decided); `for play` only counts them.
-
+`for run` requires provenance marks on emitted values, including proposals.
 Standard library only (Python 3.11+). Run `python3 kitc.py --help`.
 """
 
@@ -43,49 +30,39 @@ VOCAB_PATH = Path(__file__).with_name("vocab.json")
 # ---------------------------------------------------------------------------
 # Syntax uses English/ASCII words. Japanese remains valid in comments and data.
 
-MOVE_ALIASES = {
-    "main_shot": "main_shot",
-    "neutral_melee": "neutral_melee",
-    "up_melee": "up_melee",
-    "side_melee": "side_melee",
-    "boost_dash_melee": "boost_dash_melee",
-    "sub_shot": "sub_shot",
-    "special_shot": "special_shot",
-    "special_melee": "special_melee",
-    "charge_shot": "charge_shot",
-    "CS": "charge_shot",
-    "down_melee": "down_melee",
-}
-# The weapon rows that are not kit moves: the original's controller plays them.
-# Directional and movement-context commands need their own controller mapping.
-# down_melee already has a native kit command; do not gate it with these stubs.
-DIRECTIONAL_MELEE = ("neutral_melee", "up_melee", "side_melee", "boost_dash_melee")
-WEAPON_ROWS = ("main_shot", *DIRECTIONAL_MELEE)
+# Canonical public command identities; independent of native performance names.
+MELEE_COMMANDS = (
+    "neutral_melee", "up_melee", "side_melee", "down_melee", "boost_dash_melee",
+)
+MOVE_COMMANDS = (
+    "main_shot", *MELEE_COMMANDS,
+    "sub_shot", "special_shot", "special_melee", "charge_shot",
+)
+# This is the one supported spelling alias, not an identity/translation table.
+MOVE_ALIASES = {"CS": "charge_shot"}
 
-# Public commands and the frozen backend vocabulary have different namespaces.
-# Never collapse split melee commands into the old aggregate row.
+# v0 recognizes these commands but cannot translate their performance settings.
+# down_melee has a working kit mapping and is deliberately not in this set.
+UNSUPPORTED_MOVE_COMMANDS = frozenset(MELEE_COMMANDS) - {"down_melee"}
+# These public commands have no performance binding in the frozen kit schema.
+NON_KIT_COMMANDS = frozenset({"main_shot", *UNSUPPORTED_MOVE_COMMANDS})
+
+# Required backend translation: the game's serialized settings still use main=.
 LEGACY_WEAPON_KEYS = {"main_shot": "main"}
 
-PROP_ALIASES = {
-    "perf": "perf",
-    "inertia": "inertia",
-    "ammo": "ammo",
-    "boost": "boost",
-    "cancel": "cancel",
-    "air": "air",
-    "rainbow": "rainbow",
-    "shots": "shots",
-}
-
-HEADER_ALIASES = {
-    "system": "system",
-    "raw": "raw",
-}
+MOVE_PROPERTIES = frozenset({
+    "perf", "inertia", "ammo", "boost", "cancel", "air", "rainbow", "shots",
+})
+SECTION_HEADERS = frozenset({"system", "raw"})
+MELEE_MIGRATION_HINT = (
+    " / ".join(f"`{name}`" for name in MELEE_COMMANDS)
+    + " を対象に応じて選ぶ（単純置換しない）"
+)
 
 # Migration hints only: these spellings are rejected, never normalized.
 JAPANESE_MIGRATIONS = {
     "メイン": "main_shot",
-    "格闘": "neutral_melee / side_melee",
+    "格闘": " / ".join(MELEE_COMMANDS),
     "サブ": "sub_shot",
     "特射": "special_shot",
     "特格": "special_melee",
@@ -188,7 +165,7 @@ def read_lines(text: str) -> list[tuple[int, bool, list[str], str | None]]:
             if words[0] == "格闘":
                 raise KitError(
                     f"{no} 行目：`格闘` は格闘全般の旧名。"
-                    "`neutral_melee` / `side_melee` を対象に応じて選ぶ（単純置換しない）"
+                    + MELEE_MIGRATION_HINT
                 )
             raise KitError(
                 f"{no} 行目：日本語の構文語 `{words[0]}` は使えない。`{replacement}` に置き換える"
@@ -230,7 +207,7 @@ def parse(text: str) -> Sheet:
         if head == "melee":
             raise KitError(
                 f"{no} 行目：技の見出し `melee` は格闘全般の旧名。"
-                "`neutral_melee` / `side_melee` を対象に応じて選ぶ（単純置換しない）"
+                + MELEE_MIGRATION_HINT
             )
         if head == "kit":
             if sheet.kit or len(words) != 2:
@@ -244,16 +221,16 @@ def parse(text: str) -> Sheet:
             if sheet.hp or len(words) not in (2, 3):
                 raise KitError(f"{no} 行目：`hp <hp> [unit=<scale>]` を 1 回だけ")
             sheet.hp = line
-        elif head in MOVE_ALIASES:
+        elif head in MOVE_COMMANDS or head in MOVE_ALIASES:
             if len(words) != 1:
                 raise KitError(f"{no} 行目：技の見出しは名前だけ（`{head}`）。中身は字下げして書く")
-            name = MOVE_ALIASES[head]
+            name = MOVE_ALIASES.get(head, head)
             if any(b.kind == "move" and b.name == name for b in sheet.blocks):
                 raise KitError(f"{no} 行目：`{name}` の見出しが 2 回ある")
             current = Block(line, "move", name)
             sheet.blocks.append(current)
-        elif head in HEADER_ALIASES:
-            kind = HEADER_ALIASES[head]
+        elif head in SECTION_HEADERS:
+            kind = head
             if len(words) != 1 or any(b.kind == kind for b in sheet.blocks):
                 raise KitError(f"{no} 行目：`{head}` の見出しは 1 回だけ、名前だけ")
             current = Block(line, kind, kind)
@@ -391,24 +368,24 @@ class Compiler:
                     self.raw[line.words[0]] = (line, " ".join(line.words[1:]))
 
     def collect_move(self, block: Block) -> None:
-        if block.name in DIRECTIONAL_MELEE and block.lines:
+        if block.name in UNSUPPORTED_MOVE_COMMANDS and block.lines:
             raise KitError(
-                f"{block.lines[0].where()}：`{block.name}` の方向別設定は v0 未対応"
-                "（unsupported_command_split）。controller の方向別役割と演目集合を"
+                f"{block.lines[0].where()}：`{block.name}` の個別設定は v0 未対応"
+                "（unsupported_command_split）。controller の方向・移動状態別役割と演目集合を"
                 "接続する必要がある。格闘全般の `melee` へまとめて出力しない"
             )
         move = Move(block.name, block)
         self.moves[block.name] = move
         seen = set()
         for line in block.lines:
-            prop = PROP_ALIASES.get(line.words[0])
-            if prop is None:
+            prop = line.words[0]
+            if prop not in MOVE_PROPERTIES:
                 raise KitError(f"{line.where()}：`{block.name}` の知らない項目 `{line.words[0]}`")
             if prop in seen:
                 raise KitError(f"{line.where()}：`{block.name}` の `{prop}` を 2 回書いている")
             seen.add(prop)
             if prop == "perf":
-                if block.name in WEAPON_ROWS:
+                if block.name in NON_KIT_COMMANDS:
                     raise KitError(
                         f"{line.where()}：`{block.name}` はキットの外（原作の controller が出す）。"
                         "演目を結べるのは sub_shot・special_shot・special_melee・charge_shot・down_melee だけ"
@@ -448,7 +425,7 @@ class Compiler:
 
     def compile_kit(self) -> None:
         if self.kit is None:
-            bound = [m for m in self.moves if m not in WEAPON_ROWS and self.moves[m].perf]
+            bound = [m for m in self.moves if m not in NON_KIT_COMMANDS and self.moves[m].perf]
             if bound:
                 raise KitError(f"{self.moves[bound[0]].perf_line.where()}：演目を結ぶには `kit <name>` が要る")
             return
@@ -460,7 +437,7 @@ class Compiler:
             if name in spec["fixed"]:
                 fixed = tuple(spec["fixed"][name])
                 if perf is not None and perf != fixed:
-                    raise self.needs_v1(move, f"`{name}` は今のキット `{self.kit}` では {fixed[0]} / {fixed[1]} に決まっている")
+                    raise self.unsupported_binding(move, f"`{name}` は今のキット `{self.kit}` では {fixed[0]} / {fixed[1]} に決まっている")
                 if perf is None and move is not None:
                     self.notes.append(f"`{name}` の演目はキットの既定 {fixed[0]} / {fixed[1]}")
                 if move and move.perf_line:
@@ -469,13 +446,13 @@ class Compiler:
             choices = spec["choices"].get(name)
             if choices is None:
                 if perf is not None:
-                    raise self.needs_v1(move, f"キット `{self.kit}` の `{name}` には、いまの SAIKAI_KIT で結べる演目が無い")
+                    raise self.unsupported_binding(move, f"キット `{self.kit}` の `{name}` には、いまの SAIKAI_KIT で結べる演目が無い")
                 continue
             if perf is None:
                 continue
             key = perf[0] if perf[0] == perf[1] else f"{perf[0]}/{perf[1]}"
             if key not in choices:
-                raise self.needs_v1(move, f"`{name}` の演目 `{key}` は SAIKAI_KIT の選択肢（{', '.join(choices)}）に無い")
+                raise self.unsupported_binding(move, f"`{name}` の演目 `{key}` は SAIKAI_KIT の選択肢（{', '.join(choices)}）に無い")
             choice = choices[key]
             if choice != spec["defaults"].get(name):
                 options.append(f"{name}={choice}")
@@ -490,11 +467,11 @@ class Compiler:
                 "（起動時に too_many_donors で断られる）"
             )
 
-    def needs_v1(self, move: Move | None, why: str) -> KitError:
+    def unsupported_binding(self, move: Move | None, why: str) -> KitError:
         where = move.perf_line.where() if move and move.perf_line else self.sheet.kit.where()
         return KitError(
-            f"{where}：{why}。v0 は今の SAIKAI_KIT の文字列にしか訳せない。"
-            "この割り当てには saikai 側で SAIKAI_KIT=@<kit-file> を読む変更（README の v1）が要る"
+            f"{where}：{why}（unsupported_binding）。v0 の固定backendはこの割り当てを表現できない。"
+            "対象の入力と演目を扱う runtime 接続が必要（design/implementation.md）"
         )
 
     def kit_perfs(self) -> dict[str, tuple[str | None, str | None]]:
@@ -609,7 +586,7 @@ class Compiler:
     def move_lines(self, prop: str):
         for name, move in self.moves.items():
             for line in move.block.lines if move.block else []:
-                if PROP_ALIASES[line.words[0]] == prop:
+                if line.words[0] == prop:
                     yield name, move, line
 
     def require(self, layer: str, line: Line, prop: str) -> bool:

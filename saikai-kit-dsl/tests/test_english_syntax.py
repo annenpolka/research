@@ -1,6 +1,6 @@
 """English syntax regressions; Japanese comments, paths and display text remain data.
 
-The Markdown check is lexical only: it does not claim that the proposed v1
+The Markdown check is lexical only: it does not claim that the proposed extended
 language is implemented by the v0 compiler.
 """
 
@@ -19,17 +19,16 @@ import kitc  # noqa: E402
 
 class EnglishSyntax(unittest.TestCase):
     def test_accepted_words_are_ascii(self):
-        for words in (kitc.MOVE_ALIASES, kitc.PROP_ALIASES, kitc.HEADER_ALIASES):
-            for name, canonical in words.items():
-                with self.subTest(name=name):
-                    self.assertTrue(name.isascii())
-                    self.assertTrue(canonical.isascii())
+        words = (
+            *kitc.MOVE_COMMANDS, *kitc.MOVE_PROPERTIES, *kitc.SECTION_HEADERS,
+            *kitc.MOVE_ALIASES, *kitc.MOVE_ALIASES.values(),
+        )
+        for name in words:
+            with self.subTest(name=name):
+                self.assertTrue(name.isascii())
 
     def test_all_canonical_move_headers_parse(self):
-        for name in (
-            "main_shot", "neutral_melee", "side_melee", "sub_shot", "special_shot", "special_melee",
-            "charge_shot", "down_melee",
-        ):
+        for name in kitc.MOVE_COMMANDS:
             with self.subTest(name=name):
                 sheet = kitc.parse(f"kit rena\n{name}\n")
                 self.assertEqual(sheet.blocks[0].name, name)
@@ -37,7 +36,7 @@ class EnglishSyntax(unittest.TestCase):
 
     def test_japanese_headers_are_rejected_with_replacements(self):
         headers = {
-            "メイン": "main_shot", "格闘": "neutral_melee / side_melee", "サブ": "sub_shot",
+            "メイン": "main_shot", "格闘": "neutral_melee / up_melee / side_melee / down_melee / boost_dash_melee", "サブ": "sub_shot",
             "特射": "special_shot", "特格": "special_melee",
             "射CS": "charge_shot", "下格": "down_melee",
             "下格闘": "down_melee", "システム": "system",
@@ -108,7 +107,7 @@ class EnglishSyntax(unittest.TestCase):
             "format", "kit", "for", "move", "resource", "bind", "unbind",
             "observe", "cancel", "followup", "transition", "retime",
             "frames", "animation", "motion", "tune", "kitc", "main", "melee",
-            *kitc.MOVE_ALIASES, *kitc.JAPANESE_MIGRATIONS,
+            *kitc.MOVE_COMMANDS, *kitc.MOVE_ALIASES, *kitc.JAPANESE_MIGRATIONS,
         }
         paths = [ROOT / "README.md", *sorted((ROOT / "design").glob("*.md"))]
         checked = 0

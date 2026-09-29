@@ -8,7 +8,7 @@
 
 **キーワード、コマンド名、項目名、列挙値、参照用IDは英語のASCII表記に統一する。** 日本語の構文別名は設けない。日本語は説明文、コメント、引用符で囲んだ表示ラベル、ファイルパスなどの文字列データに残せる。表示ラベルを技IDや入力名として解釈しない。
 
-コマンドの正規名は `main_shot`、`neutral_melee`、`up_melee`、`side_melee`、`down_melee`、`boost_dash_melee`、`sub_shot`、`special_shot`、`special_melee`、`charge_shot`。システム入力の設計例は `step` を使うが、v0の技見出しへ追加する意味ではない。旧表記からの移行は [READMEの対応表](../README.md#文法の英語表記)を参照。
+公開コマンドは [§2.1の一覧](#21-主射撃と方向別格闘コマンド) を正とする。システム入力の設計例 `step` はこの公開技見出し集合には含めない。旧ファイルの移行は [MIGRATIONS.md](../MIGRATIONS.md)、動作するv0の範囲は [README](../README.md) を参照。
 
 ```text
 format 1
@@ -62,13 +62,17 @@ bindingを宣言したcommandは、その層の宣言集合で基底の集合を
 | Command | 意味 | 一括して含めないもの |
 |---|---|---|
 | `main_shot` | 主射撃 | `special_shot` や `charge_shot` |
+| `sub_shot` | サブ射撃 | 主射撃や特殊射撃 |
+| `special_shot` | 特殊射撃 | 特殊格闘 |
+| `special_melee` | 特殊格闘 | 方向別の通常格闘 |
+| `charge_shot` | 射撃チャージ | 通常射撃の押下や自動的な多段発射 |
 | `neutral_melee` | N格闘 | 横格・前格・BD格など格闘全般 |
 | `up_melee` | 前格闘（レバー上の入力） | 上昇攻撃・空中格闘という動作の意味 |
 | `side_melee` | 横格闘（左右） | N格・ステップ格闘・単なる横移動 |
 | `down_melee` | 下格闘（既存コマンド名を維持） | 急降下・背面への攻撃という動作の意味 |
 | `boost_dash_melee` | BD格闘（BD状態を伴う認識済み入力） | 原作の地上ダッシュ格闘・AD格闘との無条件な同一視 |
 
-N格・前格・横格・下格・BD格は独立したCommand。方向の分類と地上/空中の区別は分け、姿勢ごとの演目・性能は各MoveDefで決める。BD格は移動状態を認識条件に含むため、どの姿勢・入力で成立するかと方向別格闘との競合優先順を共通rules/controllerで定義する。この名前の追加だけでゲーム側の認識規則は変えない。
+N格・前格・横格・下格・BD格は独立したCommand。方向の分類と地上/空中の区別は分け、姿勢ごとの演目・性能は各MoveDefで決める。BD格は移動状態を認識条件に含むため、どの姿勢・入力で成立するかと方向別格闘との競合優先順を共通rules/controllerで定義する。入力認識の実装はruntimeの責務で、DSLの識別子だけでは実現されない。
 
 `side_melee` は左右をまとめた入力種別だが、左右方向の情報は認識時のpayloadに残す。左右共通なら一つのbinding、異なる技なら `lever=left` / `lever=right` の条件で分ける。`neutral_melee lever=left` や `up_melee lever=down` のようなコマンドと矛盾する条件は拒否し、片方を優先して読み替えない。方向名は `up` / `down` / `left` / `right` / `neutral` を基準にし、方向の座標・斜め入力の分類・BDとの優先順は固定rulesetに従う。
 
@@ -78,7 +82,7 @@ N格・前格・横格・下格・BD格は独立したCommand。方向の分類�
 [commands.rs](https://gitlab.com/hidebu-reiwa/daybreak-saikai/-/blob/f6b6e033fa036e0f0f89f5c0eff092fc0fad6294/crates/saikai-rules/src/commands.rs) の方向ビットは `UP` / `DOWN` / `LEFT` / `RIGHT`、既存の下格コマンドは `Command::DownMelee` / `down_melee`。同版には `UpMelee` や `BoostDashMelee` のCommandはまだない。
 [class.rs](https://gitlab.com/hidebu-reiwa/daybreak-saikai/-/blob/f6b6e033fa036e0f0f89f5c0eff092fc0fad6294/crates/saikai-runtime/src/class.rs) の原作格闘役割は `front`、`side`、`dash`、`air_dash` 等であり、入力コマンドとは別の名前空間である。
 
-この入力側の `up` / `down` に合わせ、前格の公開名を `up_melee`、下格を `down_melee` とする。`front_melee` / `back_melee` を公開コマンドの別名にはしない。これは新しいDSL名の選択で、ゲーム側に既に同名Commandが実装されているという主張ではない。
+この入力側の `up` / `down` に合わせ、前格の公開名を `up_melee`、下格を `down_melee` とする。`front_melee` / `back_melee` を公開コマンドの別名にはしない。DSLの正規名と、固定版ゲームに実装されているCommand集合は区別する。
 
 一方、登録済みの素材ID `nata.front_melee`、`nata.dash_melee`、`nata.air_dash_melee` 等は改名しない。`up_melee` がどの演目を使うかは明示的なbinding/MoveDefで決める。`boost_dash_melee` も原作の `dash` / `air_dash` の片方または両方へ名前だけで対応付けない。原作由来の語彙と再開の入力仕様を混ぜないための区別である。
 
@@ -107,9 +111,9 @@ move primary_fire
 
 `input=` はCommand、`into=` はMoveIdで、同じ名前空間ではない。複数の格闘を同じ演目で演じる場合も、定義・実行元・受付窓を同一化しない。一方の調整を他方へ広げるbackendでは、その要求を拒否する。
 
-旧コマンド `main` は `main_shot` へ移行し、互換別名にはしない。旧 `melee` は格闘全般だったので、N格への単純な改名は禁止する。対象を見直して各技へ分ける。全格闘に共通の設定が必要な場合も、N格という名前に押し込まず、将来の明示的な共通設定機構で扱う。
+全格闘へ共通設定を適用する機構と、一つのN格を指定する `neutral_melee` は別である。コマンドは一意な入力種別を表し、暗黙に全格闘へ適用しない。
 
-v0では `main_shot` を既存backendの `main` キーへ変換する。N格/前格/横格/BD格の個別接続はまだ実装していないため、4見出しの性能指定は `unsupported_command_split` で拒否する。既存の `down_melee` の変換は維持し、この未対応集合に含めない。名前の区別を追加したことを、個別のゲーム動作の実装済み宣言にしない。`system` の層名 `melee`、既存環境変数のキー、PerfIdの `nata.melee` 等はこの命名変更の対象外。
+v0では `main_shot` の設定をbackendの `main` キーへ変換し、`down_melee` は既存キットへ接続する。N格/前格/横格/BD格はパーサーで別々に保持するが、設定の変換は `unsupported_command_split` で拒否する。`system` の層名 `melee`、シリアライズ済みbackendキー、素材の `nata.melee` 等は公開Commandとは独立した契約である。
 
 ## 3. 資源
 

@@ -124,11 +124,11 @@ class Refusals(unittest.TestCase):
     def test_a_borrow_never_measured_onto_the_base(self):
         refused(self, "kit mion\nspecial_melee\n  perf iron.slide_melee\n", "unmeasured_borrow")
 
-    def test_a_binding_the_kit_setting_cannot_say_needs_v1(self):
-        refused(self, "kit rena\nsub_shot\n  perf nata.shot\n", "v1")
-        refused(self, "kit mion\nsub_shot\n  perf water.shot\n", "v1")
+    def test_a_binding_outside_the_backend_choices_is_rejected(self):
+        refused(self, "kit rena\nsub_shot\n  perf nata.shot\n", "unsupported_binding")
+        refused(self, "kit mion\nsub_shot\n  perf water.shot\n", "unsupported_binding")
 
-    def test_the_main_and_the_melees_are_not_the_kits(self):
+    def test_main_shot_performance_is_owned_by_the_native_controller(self):
         refused(self, "kit rena\nmain_shot\n  perf nata.shot\n", "controller")
 
     def test_a_layer_the_water_gun_has_not_got(self):
